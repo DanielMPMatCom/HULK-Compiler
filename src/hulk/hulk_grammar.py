@@ -9,7 +9,7 @@ Declaration_list, Declaration = G.NonTerminals('Declaration_list Declaration')
 Expression, Line_Expression, Program_Expression, Simple_Expression, Non_Empty_Expression_list, Comma_Sep_Expr_List, Expression_Block, = G.NonTerminals(
     'Expression Line_Expression Program_Expression Simple_Expression Non_Empty_Expression_list Comma_Sep_Expr_List Expression_Block'
     )
-Factor, Atom = G.NonTerminals('Factor Atom')
+Atom = G.NonTerminal('Atom')
 Arithmetic_Expression_p_m, Arithmetic_Expression_s_d_mod = G.NonTerminal(
     'Arithmetic_Expression_p_m Arithmetic_Expression_s_d_mod'
     )
@@ -37,7 +37,7 @@ semi, colon, comma, dot, opar, cpar, ocurly, ccurly, obrack, cbrack = G.Terminal
 plus, minus, star, div, power, power_star , concat, dobleconcat, arrow, mod = G.Terminal('+ - * / ^ ** @ @@ => %')
 eq, neq, le, leq, gr, greq, eqeq, dest_eq = G.Terminals('= != < <= > >= == :=')
 and_, or_, not_ = G.Terminal('& | !') 
-num_, str_, bool_, const_, id_, let_, in_, is_, as_, if_, elif_, else_, while_, for_, new, type_id = G.Terminal('num str bool const id let in is as if elif else while for new type_id')
+num_, str_, bool_, id_, let_, in_, is_, as_, if_, elif_, else_, while_, for_, new, type_id = G.Terminal('num str bool id let in is as if elif else while for new type_id')
 func_, type_, inherits_, protocol_, extends_, base_ = G.Terminal('func type inherits protocol extends base')
 bar_bar_ = G.Terminal('||')
 
@@ -160,16 +160,14 @@ Not_Operation %= Obj_Indx_Method_Attr_Call
 Obj_Indx_Method_Attr_Call %= Obj_Indx_Method_Attr_Call + dot + id_ + opar + Obj_Indx_Method_Attr_Call + cpar
 Obj_Indx_Method_Attr_Call %= Obj_Indx_Method_Attr_Call + dot + id_
 Obj_Indx_Method_Attr_Call %= Obj_Indx_Method_Attr_Call + obrack + Expression + cbrack
-Obj_Indx_Method_Attr_Call %= Factor
+Obj_Indx_Method_Attr_Call %= Atom
 
 Func_Call %= id_ + opar + Comma_Sep_Expr_List + cpar
 
 Vector_Initialization %= obrack + Comma_Sep_Expr_List + cbrack
 Vector_Initialization %= obrack + Expression + bar_bar_ + id_ + in_ + Expression + cbrack
 
-Factor %= opar + Expression + cpar
-Factor %= Atom
-
+Atom %= opar + Expression + cpar
 Atom %= num_
 Atom %= str_
 Atom %= bool_
