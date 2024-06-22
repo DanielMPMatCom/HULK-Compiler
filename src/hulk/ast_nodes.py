@@ -1,12 +1,13 @@
 from abc import ABC
 from typing import List, Tuple
+from ..cmp.ast import*
 
 
 
 #----------------------------------------------------------Level0---------------------------------------------------------#
 
-class Node:
-    pass
+# class Node:
+#     pass
 
 #----------------------------------------------------------Level1---------------------------------------------------------#
 
@@ -15,21 +16,18 @@ class ProgramNode(Node):
         self.declarations = declarations
         self.expression = expression
 
-class DeclarationNode(Node):
+class DeclarationNode(Node, ABC):
     pass
 
-class ExpressionNode(Node):
+class ExpressionNode(Node, ABC):
     pass
-
-class VectorNode(Node):
-    def __init__(self, elements_type):
-        self.elements_type = elements_type
 
 
 #----------------------------------------------------------Level2---------------------------------------------------------#
 
 class TypeDeclarationNode(DeclarationNode):
     def __init__(self, identifier, params, type_body, type_parent, type_parent_args=None):
+        DeclarationNode.__init__(self)
         if params and len(params) > 0:
             params_ids, params_types = [(param[0], param[1]) for param in params]
         elif params:
@@ -49,6 +47,7 @@ class TypeDeclarationNode(DeclarationNode):
 
 class FunctionDeclarationNode(DeclarationNode):
     def __init__(self, identfier, params, expression, type=None):
+        DeclarationNode.__init__(self)
         if len(params) > 0:
             params_ids, params_types = [(param[0], param[1]) for param in params]
         else: 
@@ -61,12 +60,14 @@ class FunctionDeclarationNode(DeclarationNode):
 
 class ProtocolDeclarationNode(DeclarationNode):
     def __init__(self, identifier, signatures, parent):
+        DeclarationNode.__init__(self)
         self.identifier = identifier
         self.signatures = signatures
         self.parent = parent
 
 class MethodNode(DeclarationNode):
     def __init__(self, identifier, params, expression, type=None):
+        DeclarationNode.__init__(self)
         if len(params) > 0:
             params_ids, params_types = [(param[0], param[1]) for param in params]
         else: 
@@ -79,12 +80,14 @@ class MethodNode(DeclarationNode):
 
 class AttributeNode(DeclarationNode):
     def __init__(self, identifier, expression, type=None):
+        DeclarationNode.__init__(self)
         self.identifier = identifier
         self.expression = expression
         self.type = type
 
 class ProtocolMethodSignatureNode(DeclarationNode):
     def __init__(self, identifier, params, type):
+        DeclarationNode.__init__(self)
         if len(params) > 0:
             params_ids, params_types = [(param[0], param[1]) for param in params]
         else:
@@ -94,23 +97,31 @@ class ProtocolMethodSignatureNode(DeclarationNode):
         self.params_types = params_types
         self.type = type
 
+class VectorNode(ExpressionNode):
+    def __init__(self, elements_type):
+        DeclarationNode.__init__(self)
+        self.elements_type = elements_type
 class VariableDeclarationNode(DeclarationNode):
     def __init__(self, identifier, expression, type=None):
+        DeclarationNode.__init__(self)
         self.identifier = identifier
         self.expression = expression
         self.type = type
 
 class ExpressionBlockNode(ExpressionNode):
-    def __init_(self, expressions):
+    def __init__(self, expressions):
+        ExpressionNode.__init__(self)
         self.expressions = expressions
 
 class LetInNode(ExpressionNode):
     def __init__(self, assignment_list, expression):
+        ExpressionNode.__init__(self)
         self.assignment_list = assignment_list
         self.expression = expression
 
 class IfElseNode(ExpressionNode):
     def __init__(self, condition_expressions: List[Tuple], else_expression):
+        ExpressionNode.__init__(self)
         conditions, expressions = [(element[0], element[1]) for element in condition_expressions]
         self.conditions = conditions
         self.expressions = expressions
@@ -118,120 +129,136 @@ class IfElseNode(ExpressionNode):
 
 class WhileNode(ExpressionNode):
     def __init__(self, condition, expression):
+        ExpressionNode.__init__(self)
         self.condition = condition
         self.expression = expression
 
 class ForNode(ExpressionNode):
     def __init__(self, iterator, iterable_expression, expression):
+        ExpressionNode.__init__(self)
         self.iterator = iterator
         self.iterable_expression = iterable_expression
         self.expression = expression
 
 class DestructiveOperationNode(ExpressionNode):
     def __init__(self, destiny, expression):
+        ExpressionNode.__init__(self)
         self.destiny = destiny
         self.expression = expression
 
 class NewTypeNode(ExpressionNode):
     def __init__(self, identifier, args):
+        ExpressionNode.__init__(self)
         self.identifier = identifier
         self.args = args
 
 class IsNode(ExpressionNode):
     def __init__(self, expression, type):
+        ExpressionNode.__init__(self)
         self.expression = expression
         self.type = type
 
 class AsNode(ExpressionNode):
     def __init__(self, expression, type):
+        ExpressionNode.__init__(self)
         self.expression = expression
         self.type = type
 
 class FunctionCallNode(ExpressionNode):
     def __init__(self, identifier, args):
+        ExpressionNode.__init__(self)
         self.identifier = identifier
         self.args = args
 
 class MethodCallNode(ExpressionNode):
     def __init__(self, object_identifier, method_identifier, args):
+        ExpressionNode.__init__(self)
         self.object_identifier = object_identifier
         self.method_identifier = method_identifier
         self.args = args
 
 class AttributeCallNode(ExpressionNode):
     def __init__(self, object_identifier, attribute_idetifier):
+        ExpressionNode.__init__(self)
         self.object_identifier = object_identifier
         self.attribute_idetifier = attribute_idetifier
 
 class BaseCallNode(ExpressionNode):
     def __init__(self, args):
+        ExpressionNode.__init__(self)
         self.args = args
 
 class IndexNode(ExpressionNode):
     def __init__(self, object, index):
+        ExpressionNode.__init__(self)
         self.object = object
         self.index = index
 
 class UnaryExpressionNode(ExpressionNode):
     def __init__(self, expression):
+        ExpressionNode.__init__(self)
         self.expression = expression
         self.operator = None
 
 class BinaryExpressionNode(ExpressionNode):
     def __init__(self, left_expression, right_expression):
+        ExpressionNode.__init__(self)
         self.left_expression = left_expression
         self.right_expression = right_expression
         self.operator = None
 
 class InitializeVectorNode(ExpressionNode):
     def __init__(self, elements):
+        ExpressionNode.__init__(self)
         self.elements = elements
 
 class InitializeVectorListComprehensionNode(ExpressionNode):
     def __init__(self, operation, variable_identifier, iterable_expression):
+        ExpressionNode.__init__(self)
         self.operation = operation
         self.variable_identifier = variable_identifier
         self.iterable_expression = iterable_expression
 
 class AtomNode(ExpressionNode):
     def __init__(self, lexeme):
+        ExpressionNode.__init__(self)
         self.lexeme = lexeme
 
 
 #-------------------------------------------------------Level3------------------------------------------------------------#
 
 
-class NumNode(AtomNode):
+class NumNode(AtomNode, ABC):
     pass
 
-class StringNode(AtomNode):
+class StringNode(AtomNode, ABC):
     pass
 
-class BoolNode(AtomNode):
+class BoolNode(AtomNode, ABC):
     pass
 
-class IDNode(AtomNode):
+class IDNode(AtomNode, ABC):
     pass
 
-class BoolBinaryOpNode(BinaryExpressionNode):
+class BoolBinaryOpNode(BinaryExpressionNode, ABC):
     pass
 
-class EqualityBinaryOpNode(BinaryExpressionNode):
+class EqualityBinaryOpNode(BinaryExpressionNode, ABC):
     pass
 
-class InequalityBinaryOpNode(BinaryExpressionNode):
+class InequalityBinaryOpNode(BinaryExpressionNode, ABC):
     pass
 
-class StringBinaryOpNode(BinaryExpressionNode):
+class StringBinaryOpNode(BinaryExpressionNode, ABC):
     pass
 
-class ArithmeticBinaryOpNode(BinaryExpressionNode):
+class ArithmeticBinaryOpNode(BinaryExpressionNode, ABC):
     pass
 
-class SignUnaryOpNode(UnaryExpressionNode):
+class SignUnaryOpNode(UnaryExpressionNode, ABC):
     pass
 
-class NotUnaryOpNode(UnaryExpressionNode):
+class NotUnaryOpNode(UnaryExpressionNode, ABC):
     pass
 
 

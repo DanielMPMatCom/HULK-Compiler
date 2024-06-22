@@ -73,7 +73,7 @@ Expression %= Simple_Expression, lambda h,s: s[1], None
 Expression %= Expression_Block, lambda h,s: s[1], None
 
 # An expression block is a list of expressions enclosed in curly braces. It can't be empty
-Expression_Block %= ocurly + Non_Empty_Expression_list + ccurly, lambda h,s: s[2], None, None, None
+Expression_Block %= ocurly + Non_Empty_Expression_list + ccurly, lambda h,s: ExpressionBlockNode(s[2]), None, None, None
 
 # A non empty expression list is a line expression or a line expression followed by a non empty expression list
 Non_Empty_Expression_list %= Line_Expression, lambda h,s: [s[1]], None
