@@ -1,5 +1,5 @@
 from cmp.pycompiler import Grammar
-from hulk.ast_nodes import*
+from hulk.hulk_ast import*
 
 G =  Grammar()
 
