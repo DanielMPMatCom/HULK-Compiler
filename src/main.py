@@ -1,5 +1,5 @@
-# from cmp.tools.parsing import LR1Parser
-# from hulk.hulk_grammar import G
-# from hulk.ast_nodes import*
+from hulk.parser.lr1 import LR1Parser
+from hulk.hulk_grammar import G
+from hulk.ast_nodes import*
 
-# parser = LR1Parser(G,True)
+parser = LR1Parser(G,True)

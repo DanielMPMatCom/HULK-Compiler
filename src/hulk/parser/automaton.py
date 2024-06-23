@@ -1,4 +1,4 @@
-from shift_reduce import ShiftReduceParser
+from hulk.parser.shift_reduce import ShiftReduceParser
 from cmp.automata import State, multiline_formatter
 from cmp.pycompiler import Item, Grammar
 from cmp.utils import ContainerSet
