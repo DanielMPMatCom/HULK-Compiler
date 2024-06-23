@@ -1,5 +1,5 @@
-from ..cmp.pycompiler import Grammar
-from ast_nodes import*
+from cmp.pycompiler import Grammar
+from hulk.ast_nodes import*
 
 G =  Grammar()
 
@@ -11,7 +11,7 @@ Expression, Line_Expression, Program_Expression, Simple_Expression, Non_Empty_Ex
     'Expression Line_Expression Program_Expression Simple_Expression Non_Empty_Expression_list Comma_Sep_Expr_List Expression_Block'
     )
 Atom = G.NonTerminal('Atom')
-Arithmetic_Expression_p_m, Arithmetic_Expression_s_d_mod = G.NonTerminal(
+Arithmetic_Expression_p_m, Arithmetic_Expression_s_d_mod = G.NonTerminals(
     'Arithmetic_Expression_p_m Arithmetic_Expression_s_d_mod'
     )
 Destructive_Operation, Or_Operation, And_Operation, Not_Operation = G.NonTerminals(
@@ -20,26 +20,29 @@ Destructive_Operation, Or_Operation, And_Operation, Not_Operation = G.NonTermina
 Equality_Operation, Inequality_Operation, Is_As_Operation, Concat_Operation, Plus_Minus_Sign_Operation, Pow_Operation = G.NonTerminals(
     'Equality_Operation Inequality_Operation Is_As_Operation Concat_Operation Plus_Minus_Sign_Operation Pow_Operation'
     )
-Obj_Indx_Method_Attr_Call = G.NonTerminals('Obj_Indx_Method_Attr_Call')
-Type_Declaration, New_Type_Operation, Type_Params, Type_Body = G.NonTerminals(
-    'Type_Declaration New_Type_Operation Type_Params Type_Body'
+Obj_Indx_Method_Attr_Call = G.NonTerminal('Obj_Indx_Method_Attr_Call')
+Type_Declaration, New_Type_Operation, Type_Params, Type_Body, Non_Empty_Type_Body = G.NonTerminals(
+    'Type_Declaration New_Type_Operation Type_Params Type_Body Non_Empty_Type_Body'
     )
-Protocol_Declaration, Protocol_Methods_Signatures = G.NonTerminal('Protocol_Declaration Protocol_Methods_Signatures')
+Protocol_Declaration, Protocol_Methods_Signatures = G.NonTerminals('Protocol_Declaration Protocol_Methods_Signatures')
 Func_Declaration, Func_Call = G.NonTerminals('Func_Declaration Func_Call')
-Params_list, Params_Typed, Attribute, Method = G.NonTerminals('Params_list Params_Typed Attribute Method')
-Assignment_list, Type_Var, Possibly_Empty_Type, Non_Empty_Type = G.NonTerminals('Assignment_list Type_Var Non_Empty_Type')
+Params_list, Params_Typed, Possibly_Empty_Params_list, Possibly_Empty_Param_Type, Attribute, Method = G.NonTerminals(
+    'Params_list Params_Typed Possibly_Empty_Params_list Possibly_Empty_Param_Type Attribute Method'
+    )
+Assignment_list, Type_Var, Possibly_Empty_Type, Non_Empty_Type = G.NonTerminals(
+    'Assignment_list Type_Var Possibly_Empty_Type Non_Empty_Type'
+    )
 Elif_list = G.NonTerminal('Elif_list')
 Vector_Initialization = G.NonTerminal('Vector_Initialization')
 
 
-
 #------------------------------------------------------Terminals----------------------------------------------------------
-semi, colon, comma, dot, opar, cpar, ocurly, ccurly, obrack, cbrack = G.Terminal('; : , . ( ) { } [ ]')
-plus, minus, star, div, power, power_star , concat, dobleconcat, arrow, mod = G.Terminal('+ - * / ^ ** @ @@ => %')
+semi, colon, comma, dot, opar, cpar, ocurly, ccurly, obrack, cbrack = G.Terminals('; : , . ( ) { } [ ]')
+plus, minus, star, div, power, power_star , concat, dobleconcat, arrow, mod = G.Terminals('+ - * / ^ ** @ @@ => %')
 eq, neq, le, leq, gr, greq, eqeq, dest_eq = G.Terminals('= != < <= > >= == :=')
-and_, or_, not_ = G.Terminal('& | !') 
-num_, str_, bool_, id_, let_, in_, is_, as_, if_, elif_, else_, while_, for_, new, type_id = G.Terminal('num str bool id let in is as if elif else while for new type_id')
-func_, type_, inherits_, protocol_, extends_, base_ = G.Terminal('func type inherits protocol extends base')
+and_, or_, not_ = G.Terminals('& | !') 
+num_, str_, bool_, id_, let_, in_, is_, as_, if_, elif_, else_, while_, for_, new, type_id = G.Terminals('num str bool id let in is as if elif else while for new type_id')
+func_, type_, inherits_, protocol_, extends_, base_ = G.Terminals('func type inherits protocol extends base')
 bar_bar_ = G.Terminal('||')
 
 
@@ -52,8 +55,8 @@ bar_bar_ = G.Terminal('||')
 Program %= Declaration_list + Program_Expression, lambda h,s: ProgramNode(s[1], s[2]), None, None
 
 # A declaration list is a list of 0 or more declarations
-Declaration_list %= Declaration + Declaration_list, lambda h,s: [s[1]] + s[2], None, None
-Declaration_list %= G.Epsilon, lambda h,s: [], None
+Declaration_list %= Declaration_list +  Declaration, lambda h,s: s[1] + [s[2]], None, None
+Declaration_list %= G.Epsilon, lambda h,s: []
 
 # A declaration is a type declaration, a function declaration or a protocol declaration
 Declaration %= Type_Declaration, lambda h,s: s[1], None
@@ -65,7 +68,7 @@ Program_Expression %= Simple_Expression, lambda h,s: s[1], None
 Program_Expression %= Line_Expression, lambda h,s: s[1], None
 
 # A line expression is a simple expression followed by a semicolon, an expression block or an expression block followed by a semicolon
-Line_Expression %= Expression + semi, lambda h,s: s[1], None
+Line_Expression %= Expression + semi, lambda h,s: s[1], None, None
 Line_Expression %= Expression_Block, lambda h,s: s[1], None
 
 # An expression is a single exrpession or an expression block
@@ -80,7 +83,7 @@ Non_Empty_Expression_list %= Line_Expression, lambda h,s: [s[1]], None
 Non_Empty_Expression_list %= Line_Expression + Non_Empty_Expression_list, lambda h,s: [s[1]] + s[2], None, None
 
 # A list of expressions separated by commas
-Comma_Sep_Expr_List %= G.Epsilon, lambda h,s: [], None
+Comma_Sep_Expr_List %= G.Epsilon, lambda h,s: []
 Comma_Sep_Expr_List %= Expression, lambda h,s: [s[1]], None
 Comma_Sep_Expr_List %= Expression + comma + Comma_Sep_Expr_List, lambda h,s: [s[1]] + s[3], None, None, None
 
@@ -91,21 +94,21 @@ Simple_Expression %= while_ + opar + Expression + cpar + Expression, lambda h,s:
 Simple_Expression %= for_ + opar + id_ + in_ + Expression + cpar + Expression, lambda h,s: ForNode(s[3], s[5], s[7]), None, None, None, None, None, None, None
 Simple_Expression %= Destructive_Operation, lambda h,s: s[1], None
 
-# Elif list is a list of 0 or more elif statements
-Elif_list %= elif_ + opar + Expression + cpar + Expression + Elif_list, lambda h,s: [(s[3], s[5])] + s[6], None, None, None, None, None, None
-Elif_list %= G.Epsilon, lambda h,s: [], None
-
 # Let in assignments
 Assignment_list %= Assignment_list + comma + Type_Var, lambda h,s: s[1] + [s[3]], None, None, None
 Assignment_list %= Type_Var, lambda h,s: [s[1]], None
 
 Type_Var %= id_ + Possibly_Empty_Type + eq + Expression, lambda h,s: VariableDeclarationNode(s[1], s[4], s[2]), None, None, None, None
 
-Possibly_Empty_Type %= G.Epsilon, lambda h,s: None, None
-Possibly_Empty_Type %= Non_Empty_Type, lambda h,s: s[1], None
+Possibly_Empty_Type %= G.Epsilon, lambda h,s: None
+Possibly_Empty_Type %= colon + Non_Empty_Type, lambda h,s: s[2], None, None
 
-Non_Empty_Type %= colon + id_, lambda h,s: s[2], None, None
-Non_Empty_Type %= colon + Type_Var + obrack + cbrack, lambda h,s: VectorNode(s[2]), None, None, None, None
+Non_Empty_Type %= id_, lambda h,s: s[1], None
+Non_Empty_Type %= Non_Empty_Type + obrack + cbrack, lambda h,s: VectorNode(s[1]), None, None, None
+
+# Elif list is a list of 0 or more elif statements
+Elif_list %= elif_ + opar + Expression + cpar + Expression + Elif_list, lambda h,s: [(s[3], s[5])] + s[6], None, None, None, None, None, None
+Elif_list %= G.Epsilon, lambda h,s: []
 
 # Desctructive operation
 Destructive_Operation %= Or_Operation + dest_eq + Destructive_Operation, lambda h,s: DestructiveOperationNode(s[1], s[3]), None, None, None
@@ -124,8 +127,8 @@ Equality_Operation %= Inequality_Operation, lambda h,s: s[1], None
 Inequality_Operation %= Inequality_Operation + le + Is_As_Operation, lambda h,s: LessThanNode(s[1], s[3]), None, None, None
 Inequality_Operation %= Inequality_Operation + leq + Is_As_Operation, lambda h,s: LessEqualNode(s[1], s[3]), None, None, None
 Inequality_Operation %= Inequality_Operation + gr + Is_As_Operation, lambda h,s: GreaterThanNode(s[1], s[3]), None, None, None
-Inequality_Operation %= Inequality_Operation + greq + Is_As_Operation, lambda h,s: GreaterEqualNode(s[1], s[3]), None
-Inequality_Operation %= Is_As_Operation, lambda h,s: s[1]
+Inequality_Operation %= Inequality_Operation + greq + Is_As_Operation, lambda h,s: GreaterEqualNode(s[1], s[3]), None, None, None
+Inequality_Operation %= Is_As_Operation, lambda h,s: s[1], None
 
 Is_As_Operation %= Is_As_Operation + is_ + Concat_Operation, lambda h,s: IsNode(s[1], s[3]), None, None, None
 Is_As_Operation %= Is_As_Operation + as_ + Concat_Operation, lambda h,s: AsNode(s[1], s[3]), None, None, None
@@ -184,29 +187,33 @@ Type_Declaration %= type_ + id_ + Type_Params + ocurly + Type_Body + ccurly, lam
 Type_Declaration %= type_ + id_ + Type_Params + inherits_ + id_ + ocurly + Type_Body + ccurly, lambda h,s: TypeDeclarationNode(s[2], s[3], s[7], s[5]), None, None, None, None, None, None, None, None
 Type_Declaration %= type_ + id_ + Type_Params + inherits_ + id_ + opar + Comma_Sep_Expr_List + cpar + ocurly + Type_Body + ccurly, lambda h,s: TypeDeclarationNode(s[2], s[3], s[10], s[5], s[7]), None, None, None, None, None, None, None, None, None, None, None
 
-Type_Params %= G.Epsilon, lambda h,s: None, None
-Type_Params %= opar + Params_list + cpar, lambda h,s: s[2], None, None, None
+Type_Params %= opar + Possibly_Empty_Params_list + cpar, lambda h,s: s[2], None, None, None
+Type_Params %= G.Epsilon, lambda h,s: None
 
-Params_list %= G.Epsilon, lambda h,s: [], None
+Possibly_Empty_Params_list %= Params_list, lambda h,s: s[1], None
+Possibly_Empty_Params_list %= G.Epsilon, lambda h,s: []
+
 Params_list %= id_ + Possibly_Empty_Type, lambda h,s: [(s[1], s[2])], None, None
 Params_list %= Params_list + comma + id_ + Possibly_Empty_Type, lambda h,s: s[1] + [(s[3], s[4])], None, None, None, None
 
-Type_Body %= G.Epsilon, lambda h,s: [], None
-Type_Body %= Type_Body + Attribute, lambda h,s: s[1] + [s[2]], None, None
-Type_Body %= Type_Body + Method, lambda h,s: s[1] + [s[2]], None, None
-Type_Body %= Attribute, lambda h,s: [s[1]], None
-Type_Body %= Method, lambda h,s: [s[1]], None
+Type_Body %= G.Epsilon, lambda h,s: []
+Type_Body %= Non_Empty_Type_Body, lambda h,s: s[1], None
+
+Non_Empty_Type_Body %= Non_Empty_Type_Body + Attribute, lambda h,s: s[1] + [s[2]], None, None
+Non_Empty_Type_Body %= Non_Empty_Type_Body + Method, lambda h,s: s[1] + [s[2]], None, None
+Non_Empty_Type_Body %= Attribute, lambda h,s: [s[1]], None
+Non_Empty_Type_Body %= Method, lambda h,s: [s[1]], None
 
 Attribute %= id_ + Possibly_Empty_Type + eq + Line_Expression, lambda h,s: AttributeNode(s[1], s[4], s[2]), None, None, None, None
 
-Method %= id_ + opar + Params_list + cpar + Possibly_Empty_Type + arrow + Simple_Expression + semi, lambda h,s: MethodNode(s[1], s[3], s[7], s[5]), None, None, None, None, None, None, None, None
-Method %= id_ + opar + Params_list + cpar + Possibly_Empty_Type + Expression_Block, lambda h,s: MethodNode(s[1], s[3], s[6], s[5]), None, None, None, None, None, None
-Method %= id_ + opar + Params_list + cpar + Possibly_Empty_Type + Expression_Block + semi, lambda h,s: MethodNode(s[1], s[3], s[6], s[5]), None, None, None, None, None, None, None
+Method %= id_ + opar + Possibly_Empty_Params_list + cpar + Possibly_Empty_Type + arrow + Simple_Expression + semi, lambda h,s: MethodNode(s[1], s[3], s[7], s[5]), None, None, None, None, None, None, None, None
+Method %= id_ + opar + Possibly_Empty_Params_list + cpar + Possibly_Empty_Type + Expression_Block, lambda h,s: MethodNode(s[1], s[3], s[6], s[5]), None, None, None, None, None, None
+Method %= id_ + opar + Possibly_Empty_Params_list + cpar + Possibly_Empty_Type + Expression_Block + semi, lambda h,s: MethodNode(s[1], s[3], s[6], s[5]), None, None, None, None, None, None, None
 
 # Function Declarations
-Func_Declaration %= func_ + id_ + opar + Params_list + cpar + Possibly_Empty_Type + arrow + Simple_Expression + semi, lambda h,s: FunctionDeclarationNode(s[2], s[4], s[8], s[6]), None, None, None, None, None, None, None, None, None
-Func_Declaration %= func_ + id_ + opar + Params_list + cpar + Possibly_Empty_Type + Expression_Block, lambda h,s: FunctionDeclarationNode(s[2], s[4], s[7], s[6]), None, None, None, None, None, None, None
-Func_Declaration %= func_ + id_ + opar + Params_list + cpar + Possibly_Empty_Type + Expression_Block + semi, lambda h,s: FunctionDeclarationNode(s[2], s[4], s[7], s[6]), None, None, None, None, None, None, None, None
+Func_Declaration %= func_ + id_ + opar + Possibly_Empty_Params_list + cpar + Possibly_Empty_Type + arrow + Simple_Expression + semi, lambda h,s: FunctionDeclarationNode(s[2], s[4], s[8], s[6]), None, None, None, None, None, None, None, None, None
+Func_Declaration %= func_ + id_ + opar + Possibly_Empty_Params_list + cpar + Possibly_Empty_Type + Expression_Block, lambda h,s: FunctionDeclarationNode(s[2], s[4], s[7], s[6]), None, None, None, None, None, None, None
+Func_Declaration %= func_ + id_ + opar + Possibly_Empty_Params_list + cpar + Possibly_Empty_Type + Expression_Block + semi, lambda h,s: FunctionDeclarationNode(s[2], s[4], s[7], s[6]), None, None, None, None, None, None, None, None
 
 # Protocol Declarations
 Protocol_Declaration %= protocol_ + id_ + ocurly + Protocol_Methods_Signatures + ccurly, lambda h,s: ProtocolDeclarationNode(s[2], s[4], None), None, None, None, None, None
@@ -215,7 +222,7 @@ Protocol_Declaration %= protocol_ + id_ + extends_ + id_ + ocurly + Protocol_Met
 Protocol_Methods_Signatures %= Protocol_Methods_Signatures + id_ + opar + Params_Typed + cpar + colon + Non_Empty_Type + semi, lambda h,s: s[1] + [ProtocolMethodSignatureNode(s[2], s[4], s[7])], None, None, None, None, None, None, None, None
 Protocol_Methods_Signatures %= id_ + opar + Params_Typed + cpar + colon + Non_Empty_Type + semi, lambda h,s: ProtocolMethodSignatureNode(s[1], s[3], s[6]), None, None, None, None, None, None, None
 
-Params_Typed %= G.Epsilon, lambda h,s: [], None
+Params_Typed %= G.Epsilon, lambda h,s: []
 Params_Typed %= Params_Typed + comma + id_ + colon + Non_Empty_Type, lambda h,s: s[1] + [(s[3], s[5])], None, None, None, None, None
 Params_Typed %= id_ + colon + Non_Empty_Type, lambda h,s: [(s[1], s[3])], None, None, None
 
