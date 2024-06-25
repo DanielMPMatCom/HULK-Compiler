@@ -1,4 +1,4 @@
-from cmp.utils import ContainerSet
+from cmp.utils import ContainerSet, DisjointSet
 
 class NFA:
 
@@ -209,3 +209,69 @@ def automaton_closure(a1):
     finals = {final}
 
     return NFA(states, finals, transitions, start)
+
+def distinguish_states(group, automaton, partition):
+    split = {}
+    vocabulary = tuple(automaton.vocabulary)
+
+    for member in group:
+        key = []
+        _member = member.value
+
+        for symbol in vocabulary:
+            parent = -1
+
+            if symbol in automaton.transitions[member]:
+                parent = partition[automaton.transition[member][symbol][0]].representative
+            
+            key.append(parent)
+
+        key = tuple(key)
+        
+        try: 
+            split[key].append(member)
+        except:
+            split[key] = [member]
+
+    return [group for group in split.values()]
+
+def state_minimization(automaton):
+    partition = DisjointSet(*range(automaton.states))
+    partition.merge(automaton.finals)
+    partition.merge(set(range(automaton.states)) - automaton.finals)
+
+    while True:
+        _partition = DisjointSet(*range(automaton.states))
+
+        for group in partition.groups:
+            for subgroup in distinguish_states(group, automaton, partition):
+                _partition.merge(subgroup)
+
+        if len(_partition) == len(partition):
+            break
+
+        partition = _partition
+
+    return partition
+
+def automaton_minimization(automaton):
+    partition = state_minimization(automaton)
+    states = [s for s in partition.representatives]
+    transitions = {}
+
+    for i, state in enumerate(states):
+        origin = state.value
+        for symbol, destination in automaton.transitions[origin].items():
+            destination = partition[destination[0]].representative
+
+            try:
+                transitions[(i, symbol)]
+                assert False
+            except:
+                transitions[(i, symbol)] = states.index(destination)
+
+    finals = [state.index(partition[x].representative) for x in automaton.finals]
+    start = states.index(partition[automaton.start].representative)
+
+    return DFA(len(states), finals, transitions, start)
+
