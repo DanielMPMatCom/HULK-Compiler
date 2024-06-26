@@ -41,10 +41,11 @@ class DFA(NFA):
         self.current = start
     
     def _move(self, symbol):
-        if symbol in self.transitions[self.current].keys():
-            self.current = self.transitions[self.current][symbol][0]
-            return True
-        return False
+        if symbol not in self.transitions[self.current].keys():
+            return False
+        
+        self.current = self.transitions[self.current][symbol][0]
+        return True
     
     def _reset(self):
         self.current = self.start
@@ -93,23 +94,23 @@ def nfa_to_dfa(automaton):
         for symbol in automaton.vocabulary:
             closure = epsilon_closure(automaton, move(automaton, state, symbol))
         
-        if not closure:
-            continue
+            if not closure:
+                continue
 
-        if closure not in states:
-            closure.id = len(states)
-            closure.is_final = any(x in automaton.finals for x in closure)
-            states.append(closure)
-            pending.append(closure)
+            if closure not in states:
+                closure.id = len(states)
+                closure.is_final = any(x in automaton.finals for x in closure)
+                states.append(closure)
+                pending.append(closure)
 
-        else:
-            closure.id = states.index(closure)
+            else:
+                closure.id = states.index(closure)
 
-        try:
-            transitions[state.id, symbol]
-            assert False, 'Invalid DFA!!!'
-        except:
-            transitions[state.id, symbol] = closure
+            try:
+                transitions[state.id, symbol]
+                assert False, 'Invalid DFA!!!'
+            except:
+                transitions[state.id, symbol] = closure
 
     finals = [state.id for state in states if state.is_final]
     
