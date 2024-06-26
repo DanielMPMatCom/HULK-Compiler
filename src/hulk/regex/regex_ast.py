@@ -38,12 +38,11 @@ class BinaryNode(Node):
         
 class EpsilonNode(AtomicNode):
     def evaluate(self):
-        pass
+        return NFA(states=2, finals=[1], transitions={(0, ''): [1] }, start=0)
 
 class SymbolNode(AtomicNode):
     def evaluate(self):
-        s = self.lex
-        pass
+        return NFA(states=2, finals=[1], transitions={(0, self.lex): [1] }, start=0)
 
 class ClosureNode(UnaryNode):
     @staticmethod
