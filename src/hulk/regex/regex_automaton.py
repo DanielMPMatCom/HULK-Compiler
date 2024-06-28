@@ -211,6 +211,24 @@ def automaton_closure(a1):
 
     return NFA(states, finals, transitions, start)
 
+def automaton_rank(a1, a2):
+    (_, a1_symbol), _ = a1.map.items()[0]
+    (_, a2_symbol), _ = a2.map.items()[0]
+
+    transitions = {}
+    
+    start = 0
+    final = 1
+
+    for i in range(ord(a1), ord(a2) + 1):
+        transitions[(start, chr(i))] = [final]
+
+    states = 2
+    finals = {final}
+
+    return NFA(states, finals, transitions, start)
+
+
 def distinguish_states(group, automaton, partition):
     split = {}
     vocabulary = tuple(automaton.vocabulary)

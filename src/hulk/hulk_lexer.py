@@ -75,3 +75,4 @@ class Lexer:
 
     def __call__(self, text):
         return [Token(lex, ttype) for lex, ttype in self._tokenize(text)]
+    

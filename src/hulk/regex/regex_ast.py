@@ -58,6 +58,11 @@ class ConcatNode(BinaryNode):
     @staticmethod
     def operate(lvalue, rvalue):
         return automaton_concatenation(lvalue, rvalue)
+    
+class RangeNode(BinaryNode):
+    @staticmethod
+    def operate(lvalue, rvalue):
+        return 
 
 def evaluate_reverse_parse(right_parse, operations, tokens):
     if not right_parse or not operations or not tokens:
