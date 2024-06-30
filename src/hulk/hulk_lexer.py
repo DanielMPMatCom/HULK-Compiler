@@ -1,6 +1,7 @@
 from cmp.utils import Token
 from cmp.automata import State
-from hulk.regex.regex import *
+
+from lexer.regex import Regex
 
 class Lexer:
     def __init__(self, table, eof):
@@ -10,69 +11,51 @@ class Lexer:
 
     def _build_regexs(self, table):
         regexs = []
-
-        for n, (token_type, regex) in enumerate(table):
-            _automaton = State.from_nfa(Regex(regex).automaton)
-            for state in _automaton:
-                if state.final:
-                    state.tag(n, token_type)
-                regexs.append(state)
-        
+        for n, (token_type, regex, is_regex) in enumerate(table):
+            states = State.from_nfa(Regex(regex, is_regex).automaton)
+            for v in states:
+                if v.final:
+                    v.tag = (n, token_type)
+            regexs.append(states)
         return regexs
-        
+    
     def _build_automaton(self):
         start = State('start')
-
-        for v in self.regexs:
-            start.add_epsilon_transition(v)
+        for regex in self.regexs:
+            start.add_epsilon_transition(regex)
         return start.to_deterministic()
     
     def _walk(self, string):
         state = self.automaton
         final = state if state.final else None
         final_lex = lex = ''
-
         for symbol in string:
-            _state = state[symbol]
-            if _state is not None and _state[0] is not None:
-                _state = _state[0]
+            new_state = state[symbol]
+            if new_state is not None and new_state[0] is not None:
+                new_state = new_state[0]
                 lex += symbol
 
-                if _state.final:
-                    final = _state
+                if new_state.final:
+                    # Check tag
+                    final = new_state
                     final_lex = lex
+                state = new_state
+            else:
+                break
 
-                state = _state
-        
         return final, final_lex
     
-    def _select_row_and_col(self, text, row, col):
-        for letter in text:
-            if letter == '\n':
-                row += 1
-                col = 1
-            else:
-                col += 1
-
-        return row, col
-
     def _tokenize(self, text):
-        row, col = 1, 1
-        while text: 
-            if text[0] == '\n':
-                row, col = self._select_row_and_col(text[0], row, col)
-                text = text[1:]
-                continue
+        while text:
             final, final_lex = self._walk(text)
-            if final == None:
-                raise f'invalid token line {row}, column {col}'
-
-            _, token_type = min(final.tag)
+            if len(final_lex) == 0:
+                # Error
+                break
+            n, token_type = min(final.tag)
             text = text[len(final_lex):]
             yield final_lex, token_type
         yield '$', self.eof
 
-
     def __call__(self, text):
-        return [Token(lex, ttype) for lex, ttype in self._tokenize(text)]
-    
+        return [Token(lex, token_type) for lex, token_type in self._tokenize(text)]
+

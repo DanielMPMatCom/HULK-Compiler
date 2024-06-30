@@ -1,7 +1,7 @@
 from cmp.utils import ContainerSet, DisjointSet
+import pydot
 
 class NFA:
-
     def __init__(self, states, finals, transitions, start=0):
         self.states = states
         self.start = start
@@ -23,15 +23,28 @@ class NFA:
             return self.transitions[state]['']
         except KeyError:
             return ()
+    def graph(self):
+        G = pydot.Dot(rankdir='LR', margin=0.1)
+        G.add_node(pydot.Node('start', shape='plaintext', label='', width=0, height=0))
+
+        for (start, tran), destinations in self.map.items():
+            tran = 'ε' if tran == '' else tran
+            G.add_node(pydot.Node(start, shape='circle', style='bold' if start in self.finals else ''))
+            for end in destinations:
+                G.add_node(pydot.Node(end, shape='circle', style='bold' if end in self.finals else ''))
+                G.add_edge(pydot.Edge(start, end, label=tran, labeldistance=2))
+
+        G.add_edge(pydot.Edge('start', self.start, label='', style='dashed'))
+        return G
 
     def _repr_svg_(self):
         try:
             return self.graph().create_svg().decode('utf8')
         except:
             pass
-
+    
 class DFA(NFA):
-
+    
     def __init__(self, states, finals, transitions, start=0):
         assert all(isinstance(value, int) for value in transitions.values())
         assert all(len(symbol) > 0 for origin, symbol in transitions)
@@ -39,13 +52,12 @@ class DFA(NFA):
         transitions = { key: [value] for key, value in transitions.items() }
         NFA.__init__(self, states, finals, transitions, start)
         self.current = start
-    
+
     def _move(self, symbol):
-        if symbol not in self.transitions[self.current].keys():
-            return False
-        
-        self.current = self.transitions[self.current][symbol][0]
-        return True
+        if symbol in self.transitions[self.current].keys():
+            self.current = self.transitions[self.current][symbol][0]
+            return True
+        return False
     
     def _reset(self):
         self.current = self.start
@@ -55,14 +67,13 @@ class DFA(NFA):
         for symbol in string:
             if not self._move(symbol):
                 return False
-        return self.current in self.finals
-    
+            return self.current in self.finals
+        
 def move(automaton, states, symbol):
     moves = set()
     for state in states:
         if symbol in automaton.transitions[state].keys():
-            moves.add(automaton.transitions[state][symbol])
-    
+            moves.union(set(automaton.transitions[state][symbol]))
     return moves
 
 def epsilon_closure(automaton, states):
@@ -71,163 +82,48 @@ def epsilon_closure(automaton, states):
 
     while pending:
         state = pending.pop()
-
-        _states = move(automaton, [state], '') - closure
-        pending += _states
-        closure.update(_states)
-
+        new_states = move(automaton, [state], '')
+        closure.update(new_states)
+        pending += new_states
+    
     return ContainerSet(*closure)
-        
+
 def nfa_to_dfa(automaton):
     transitions = {}
-
+    
     start = epsilon_closure(automaton, [automaton.start])
     start.id = 0
     start.is_final = any(s in automaton.finals for s in start)
-
     states = [start]
+    
     pending = [start]
 
     while pending:
         state = pending.pop()
-
         for symbol in automaton.vocabulary:
-            closure = epsilon_closure(automaton, move(automaton, state, symbol))
-        
+            valid_nodes = move(automaton, state, symbol)
+            closure = epsilon_closure(automaton, valid_nodes)
+
             if not closure:
                 continue
 
-            if closure not in states:
-                closure.id = len(states)
-                closure.is_final = any(x in automaton.finals for x in closure)
-                states.append(closure)
-                pending.append(closure)
+            if closure in states:
+                closure.id = states.index(closure)
 
             else:
-                closure.id = states.index(closure)
+                closure.id = len(states)
+                closure.is_final = any(s in automaton.finals for s in closure)
+                pending.append(closure)
+                states.append(closure)
 
             try:
                 transitions[state.id, symbol]
                 assert False, 'Invalid DFA!!!'
-            except:
-                transitions[state.id, symbol] = closure
+            except KeyError:
+                transitions[state.id, symbol] = closure.id
 
     finals = [state.id for state in states if state.is_final]
-    
     return DFA(len(states), finals, transitions)
-
-
-def automaton_union(a1, a2):
-    transitions = {}
-
-    start = 0
-    d1 = 1
-    d2 = a1.states + d1
-    final = a2.states + d2
-
-    for (origin, symbol), destination in a1.map.items():
-        transitions[(origin + d1), symbol] = [x + d1 for x in destination]
-
-    for (origin, symbol), destination in a2.map.items():
-        transitions[(origin + d2), symbol] = [x + d2 for x in destination]
-
-    transitions[(start, '')] = [d1, d2]
-
-    for state in a1.final:
-        _state = state + d1
-        try:
-            transitions[(_state, '')].extend([final])
-        except:
-            transitions[(_state, '')] = [final]
-
-    for state in a2.final:
-        _state = state + d2
-        try:
-            transitions[(_state, '')].extend([final])
-        except:
-            transitions[(_state, '')] = [final]
-
-    states = final + 1
-    finals = {final}
-
-    return NFA(states, finals, transitions, start)
-
-def automaton_concatenation(a1, a2):
-    transitions = {}
-
-    start = 0
-    d1 = 1
-    d2 = a1.states + d1
-    final = a2.states + d2
-
-    for (origin, symbol), destination in a1.map.items():
-        transitions[(origin + d1), symbol] = [x + d1 for x in destination]
-
-    for (origin, symbol), destination in a2.map.items():
-        transitions[(origin + d2), symbol] = [x + d2 for x in destination]
-
-    for state in a1.finals:
-        _state = state + d1
-        try:
-            transitions[(_state, '')].extend([d2])
-        except:
-            transitions[(_state, '')] = [d2]
-
-    for state in a2.finals:
-        _state = state + d2
-        try:
-            transitions[(_state, '')].extend([final])
-        except:
-            transitions[(_state, '')] = [final]
-
-    states = final + 1
-    finals = {final}
-
-    return NFA(states, finals, transitions, start)
-
-def automaton_closure(a1):
-    transitions = {}
-
-    start = 0
-    d1 = 1
-    final = a1.states + d1
-
-    for (origin, symbol), destination in a1.map.items():
-        transitions[(origin + d1), symbol] = [x + d1 for x in destination]
-
-    transitions[(start, '')] = [d1, final]
-
-    for state in a1.finals:
-        _state = state + d1
-        try:
-            transitions[(start, '')].extend([final])
-        except:
-            transitions[(start, '')] = [final]
-
-    transitions[(final, '')] = [start]
-
-    states = final + 1
-    finals = {final}
-
-    return NFA(states, finals, transitions, start)
-
-def automaton_rank(a1, a2):
-    (_, a1_symbol), _ = a1.map.items()[0]
-    (_, a2_symbol), _ = a2.map.items()[0]
-
-    transitions = {}
-    
-    start = 0
-    final = 1
-
-    for i in range(ord(a1), ord(a2) + 1):
-        transitions[(start, chr(i))] = [final]
-
-    states = 2
-    finals = {final}
-
-    return NFA(states, finals, transitions, start)
-
 
 def distinguish_states(group, automaton, partition):
     split = {}
@@ -240,17 +136,17 @@ def distinguish_states(group, automaton, partition):
         for symbol in vocabulary:
             parent = -1
 
-            if symbol in automaton.transitions[member]:
-                parent = partition[automaton.transition[member][symbol][0]].representative
+            if symbol in automaton.transitions[_member]:
+                parent = partition[automaton.transitions[_member][symbol][0]].representative
             
             key.append(parent)
 
         key = tuple(key)
         
         try: 
-            split[key].append(member)
+            split[key].append(_member)
         except:
-            split[key] = [member]
+            split[key] = [_member]
 
     return [group for group in split.values()]
 
@@ -273,7 +169,7 @@ def state_minimization(automaton):
 
     return partition
 
-def automaton_minimization(automaton):
+def automata_minimization(automaton):
     partition = state_minimization(automaton)
     states = [s for s in partition.representatives]
     transitions = {}
@@ -293,4 +189,3 @@ def automaton_minimization(automaton):
     start = states.index(partition[automaton.start].representative)
 
     return DFA(len(states), finals, transitions, start)
-
