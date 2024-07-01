@@ -15,7 +15,7 @@ def build_regex_grammar():
     Union %= Union + pipe + Concat, lambda h,s: UnionNode(s[1], s[3]) 
     Union %= Concat, lambda h,s: s[1]
     
-    Concat %= Concat + Closure, lambda h,s: ConcatNode(s[1], s[2])
+    Concat %= Closure + Concat, lambda h,s: ConcatNode(s[1], s[2])
     Concat %= Closure, lambda h,s: s[1]
 
     Closure %= Atom + star, lambda h,s: ClosureNode(s[1])
