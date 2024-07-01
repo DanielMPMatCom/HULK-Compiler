@@ -1,14 +1,25 @@
+from serialized import Serialized
+
 class ShiftReduceParser:
     SHIFT = "SHIFT"
     REDUCE = "REDUCE"
     OK = "OK"
 
-    def __init__(self, G, verbose=False):
+    def __init__(self, G, verbose=False, reload = False, save = False):
         self.G = G
         self.verbose = verbose
         self.action = {}
         self.goto = {}
+
+        if reload:
+            self.action = Serialized.load_object("action")
+            self.goto = Serialized.load_object("goto")
+
         self._build_parsing_table()
+
+        if save:
+            Serialized.save_object(self.action, "action")
+            Serialized.save_object(self.goto, "goto")
 
     def _build_parsing_table(self):
         raise NotImplementedError()

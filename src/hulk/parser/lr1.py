@@ -3,7 +3,7 @@ from hulk.parser.automaton import build_LR1_automaton
 
 
 class LR1Parser(ShiftReduceParser):
-    
+
     def _build_parsing_table(self):
         G = self.G.AugmentedGrammar(True)
 

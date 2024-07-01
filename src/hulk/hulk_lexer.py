@@ -1,34 +1,39 @@
 from cmp.utils import Token
 from cmp.automata import State
+from hulk.lexer.regex import Regex
 
-from lexer.regex import Regex
 
 class Lexer:
-    def __init__(self, table, eof):
+    def __init__(self, table, eof, parser):
         self.eof = eof
         self.regexs = self._build_regexs(table)
         self.automaton = self._build_automaton()
+        self.parser = parser
+        self.cont = 0
 
     def _build_regexs(self, table):
         regexs = []
+        print(
+            " = = = = = == = = = = = = = = = = = = == = " + self.cont + " = = == = = = "
+        )
         for n, (token_type, regex, is_regex) in enumerate(table):
-            states = State.from_nfa(Regex(regex, is_regex).automaton)
+            states = State.from_nfa(Regex(regex, is_regex, self.parser).automaton)
             for v in states:
                 if v.final:
                     v.tag = (n, token_type)
             regexs.append(states)
         return regexs
-    
+
     def _build_automaton(self):
-        start = State('start')
+        start = State("start")
         for regex in self.regexs:
             start.add_epsilon_transition(regex)
         return start.to_deterministic()
-    
+
     def _walk(self, string):
         state = self.automaton
         final = state if state.final else None
-        final_lex = lex = ''
+        final_lex = lex = ""
         for symbol in string:
             new_state = state[symbol]
             if new_state is not None and new_state[0] is not None:
@@ -44,7 +49,7 @@ class Lexer:
                 break
 
         return final, final_lex
-    
+
     def _tokenize(self, text):
         while text:
             final, final_lex = self._walk(text)
@@ -52,10 +57,9 @@ class Lexer:
                 # Error
                 break
             n, token_type = min(final.tag)
-            text = text[len(final_lex):]
+            text = text[len(final_lex) :]
             yield final_lex, token_type
-        yield '$', self.eof
+        yield "$", self.eof
 
     def __call__(self, text):
         return [Token(lex, token_type) for lex, token_type in self._tokenize(text)]
-

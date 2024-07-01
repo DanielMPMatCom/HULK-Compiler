@@ -1,7 +1,8 @@
 from enum import Enum, auto
 
+
 class TokenType(Enum):
-    
+    EOF = auto()
     SEMICOLON = auto()
     COLON = auto()
     COMMA = auto()
@@ -62,8 +63,6 @@ class TokenType(Enum):
 
     BAR_BAR = auto()
 
+
 def extend_tuple(elements, is_regex):
     return [(lex, token_type, is_regex) for (lex, token_type) in elements]
-
-
-    
