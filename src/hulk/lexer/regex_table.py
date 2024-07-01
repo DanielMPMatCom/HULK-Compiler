@@ -13,7 +13,6 @@ operators = [
 OPERATORS = extend_tuple(operators, False)
 
 keywords = [
-    ('num', TokenType.NUM), ('str', TokenType.STR), ('bool', TokenType.BOOL)
     ('let', TokenType.LET), ('in', TokenType.IN), ('is', TokenType.IS), ('as', TokenType.AS),
     ('if', TokenType.IF), ('elif', TokenType.ELIF), ('else', TokenType.ELSE), ('while', TokenType.WHILE),
     ('for', TokenType.FOR), ('new', TokenType.NEW), ('type_id', TokenType.TYPE_ID),
@@ -31,9 +30,9 @@ upper_letters = '(' + '|'.join(chr(n) for n in range(ord('A'), ord('Z') + 1)) + 
 
 regexs = [
     (f'(_|{lower_letters}|{upper_letters})(_|{lower_letters}|{upper_letters}|{non_negative})*', TokenType.ID)
-    (f'(True)|(False)', TokenType.BOOLEAN)
-    (f'{positive}{non_negative}*', TokenType.NUMBER)
-    (f'"({lower_letters}|{upper_letters}|{non_negative}|_)*"', TokenType.STRING)
+    (f'(True)|(False)', TokenType.BOOL)
+    (f'{positive}{non_negative}*|({positive}{non_negative}.{non_negative}*)|({non_negative}.{non_negative}*)', TokenType.NUM)
+    (f'"({lower_letters}|{upper_letters}|{non_negative}|_)*"', TokenType.STR)
 ]
 
 REGEXS = extend_tuple(regexs, True)
