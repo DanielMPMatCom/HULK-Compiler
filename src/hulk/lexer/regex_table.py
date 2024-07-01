@@ -81,4 +81,4 @@ regexs = [
 REGEXS = extend_tuple(regexs, True)
 
 
-table = [OPERATORS, KEYWORDS, REGEXS]
+table = OPERATORS + KEYWORDS + REGEXS

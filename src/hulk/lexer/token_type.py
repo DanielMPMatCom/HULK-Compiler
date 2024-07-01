@@ -65,4 +65,4 @@ class TokenType(Enum):
 
 
 def extend_tuple(elements, is_regex):
-    return [(lex, token_type, is_regex) for (lex, token_type) in elements]
+    return [(token_type, lex, is_regex) for (lex, token_type) in elements]

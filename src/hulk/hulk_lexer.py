@@ -6,16 +6,14 @@ from hulk.lexer.regex import Regex
 class Lexer:
     def __init__(self, table, eof, parser):
         self.eof = eof
+        self.cont = 0
         self.regexs = self._build_regexs(table)
         self.automaton = self._build_automaton()
         self.parser = parser
-        self.cont = 0
 
     def _build_regexs(self, table):
         regexs = []
-        print(
-            " = = = = = == = = = = = = = = = = = = == = " + self.cont + " = = == = = = "
-        )
+        print(" ========== " + str(self.cont) + " ========== ")
         for n, (token_type, regex, is_regex) in enumerate(table):
             states = State.from_nfa(Regex(regex, is_regex, self.parser).automaton)
             for v in states:
