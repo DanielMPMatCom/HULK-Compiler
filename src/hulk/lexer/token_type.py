@@ -62,6 +62,10 @@ class TokenType(Enum):
 
     BAR_BAR = auto()
 
+    NUMBER = auto()
+    STRING = auto()
+    BOOLEAN = auto()
+
 def extend_tuple(elements, is_regex):
     return [(lex, token_type, is_regex) for (lex, token_type) in elements]
 
