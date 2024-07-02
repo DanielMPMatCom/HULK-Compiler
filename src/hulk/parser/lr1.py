@@ -1,4 +1,5 @@
 from hulk.parser.shift_reduce import ShiftReduceParser
+# from cmp.tools.parsing import ShiftReduceParser
 from hulk.parser.automaton import build_LR1_automaton
 
 
@@ -30,7 +31,7 @@ class LR1Parser(ShiftReduceParser):
                             )
                 else:
                     next_symbol = item.NextSymbol
-                    next_state = node.transitions.get(next_symbol.Name, None)[0].idx
+                    next_state = node.get(next_symbol.Name).idx
                     if next_symbol.IsTerminal:
                         self._register(
                             self.action,
@@ -43,7 +44,6 @@ class LR1Parser(ShiftReduceParser):
                             (idx, next_symbol),
                             next_state,
                         )
-                pass
 
     @staticmethod
     def _register(table, key, value):

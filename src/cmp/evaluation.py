@@ -29,7 +29,7 @@ def evaluate_reverse_parse(right_parse, operations, tokens):
             else:
                 stack.append(rule(None, None))
         else:
-            raise Exception("Invalid action!!!")
+            raise Exception("Invalid action!!!", operation)
 
     assert len(stack) == 1
     assert isinstance(next(tokens).token_type, EOF)
