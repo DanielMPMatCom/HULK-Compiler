@@ -82,7 +82,7 @@ REGEXS = extend_tuple(regexs, True)
 
 
 # table = OPERATORS + KEYWORDS + REGEXS
-table = OPERATORS + KEYWORDS
+table = OPERATORS + KEYWORDS + REGEXS
 
 # -----Testing----- #
 # table = [REGEXS[0]]
