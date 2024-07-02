@@ -6,16 +6,18 @@ from hulk.lexer.regex_table import table
 from hulk.lexer.token_type import TokenType
 
 
-parser = LR1Parser(G=G, verbose=False, load=True, save=False)
+# parser = LR1Parser(G=G, verbose=False, load=False, save=True)
 
 lexer = Lexer(table=table, eof=TokenType.EOF)
 
-code_example = """
-let x = 5;
-let y = 3;
-let z = x + y; """
 
 
-tokens = lexer(code_example + TokenType.EOF.value)
-for token in tokens:
-    print(token)
+# code_example = """
+# let x = 5;
+# let y = 3;
+# let z = x + y; """
+
+
+# tokens = lexer(code_example + TokenType.EOF.value)
+# for token in tokens:
+#     print(token)

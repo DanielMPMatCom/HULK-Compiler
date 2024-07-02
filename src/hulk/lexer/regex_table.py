@@ -67,18 +67,22 @@ upper_letters = "(" + "|".join(chr(n) for n in range(ord("A"), ord("Z") + 1)) + 
 
 regexs = [
     (
-        f"(_|{lower_letters}|{upper_letters})(_|{lower_letters}|{upper_letters}|{non_negative})*",
-        TokenType.ID,
+        f'({lower_letters}|{upper_letters}|_)({non_negative}|{lower_letters}|{upper_letters}|_)*',
+        TokenType.ID
     ),
     (f"(True)|(False)", TokenType.BOOL),
     (
         f"{positive}{non_negative}*|({positive}{non_negative}.{non_negative}*)|({non_negative}.{non_negative}*)",
-        TokenType.NUM,
+        TokenType.NUM
     ),
-    (f'"({lower_letters}|{upper_letters}|{non_negative}|_)*"', TokenType.STR),
+    (f'"({lower_letters}|{upper_letters}|_)({lower_letters}|{upper_letters}|{non_negative}|_)*"', TokenType.STR)
 ]
 
 REGEXS = extend_tuple(regexs, True)
 
 
-table = OPERATORS + KEYWORDS + REGEXS
+# table = OPERATORS + KEYWORDS + REGEXS
+table = OPERATORS + KEYWORDS
+
+# -----Testing----- #
+# table = [REGEXS[0]]
