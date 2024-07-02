@@ -6,9 +6,9 @@ from hulk.lexer.regex_table import table
 from hulk.lexer.token_type import TokenType
 
 
-parser = LR1Parser(G=G, verbose=False, load=False, save=False)
+parser = LR1Parser(G=G, verbose=False, load=True, save=False)
 
-lexer = Lexer(table=table, eof=TokenType.EOF, parser=parser)
+lexer = Lexer(table=table, eof=TokenType.EOF)
 
 code_example = """
 let x = 5;

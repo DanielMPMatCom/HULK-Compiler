@@ -4,18 +4,16 @@ from hulk.lexer.regex import Regex
 
 
 class Lexer:
-    def __init__(self, table, eof, parser):
+    def __init__(self, table, eof):
         self.eof = eof
         self.cont = 0
         self.regexs = self._build_regexs(table)
         self.automaton = self._build_automaton()
-        self.parser = parser
 
     def _build_regexs(self, table):
         regexs = []
-        print(" ========== " + str(self.cont) + " ========== ")
         for n, (token_type, regex, is_regex) in enumerate(table):
-            states = State.from_nfa(Regex(regex, is_regex, self.parser).automaton)
+            states = State.from_nfa(Regex(regex, is_regex).automaton)
             for v in states:
                 if v.final:
                     v.tag = (n, token_type)

@@ -31,25 +31,27 @@ class ShiftReduceParser:
         raise ValueError(
             "Unexpected symbol",
             current_token,
-            "in ",
-            current_token.row,
-            current_token.col,
+            # "in ",
+            # current_token.row,
+            # current_token.col,
             "Expected",
             expected_symbol,
         )
 
-    def find_unexpected_symbol_and_notify(self, state):
-        state_expected, token_expected = filter(
-            self.action.keys(), lambda x: x[0] == state
-        )[0]
-        self.notify_unexpected_symbols(state_expected, token_expected)
+    # def find_unexpected_symbol_and_notify(self, state):
+    #     state_expected, token_expected = filter(
+    #         self.action.keys(), lambda x: x[0] == state
+    #     )[0]
+    #     self.notify_unexpected_symbols(state_expected, token_expected)
 
-    def __call__(self, w):
+    def __call__(self, tokens):
         stack = [0]
         cursor = 0
         output = []
         operations = []
-
+        w = [t.token_type for t in tokens]
+        print(" = = = == = = = == = = = Tokens:  = = === = = = == = = = == = =", tokens)
+        print(" = = = == = = = == = = = W:  = = === = = = == = = = == = =", w)
         while True:
             state = stack[-1]
             lookahead = w[cursor]
@@ -58,7 +60,12 @@ class ShiftReduceParser:
 
             # Your code here!!! (Detect error)
             if (state, lookahead) not in self.action.keys():
-                self.find_unexpected_symbol_and_notify(state)
+                # self.find_unexpected_symbol_and_notify(state)
+                self.notify_unexpected_symbols(
+                    lookahead,
+                    f"EOF or some symbol that not appear, Current State {state}, lookahead {tokens[cursor].lex}",
+                )
+                return
 
             action, tag = self.action[state, lookahead]
 

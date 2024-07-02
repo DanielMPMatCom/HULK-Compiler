@@ -2,6 +2,7 @@ from enum import Enum, auto
 
 
 class TokenType(Enum):
+    EOL = auto()
     EOF = auto()
     SEMICOLON = auto()
     COLON = auto()
