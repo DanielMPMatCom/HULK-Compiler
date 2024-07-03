@@ -39,10 +39,9 @@ class ShiftReduceParser:
         )
 
     def find_unexpected_symbol_and_notify(self, state, row, column):
-        state_expected, token_expected = filter(
-            self.action.keys(), lambda x: x[0] == state
-        )[0]
-        self.notify_unexpected_symbols(state_expected, token_expected)
+        posibilities = list(filter(lambda x: x[0] == state, self.action))
+        print("Filter result ", [x[1] for x in posibilities])
+        # self.notify_unexpected_symbols(f"")
 
     def __call__(self, tokens):
         stack = [0]
@@ -60,7 +59,12 @@ class ShiftReduceParser:
             # Your code here!!! (Detect error)
 
             if (state, lookahead) not in self.action:
-                self.find_unexpected_symbol_and_notify(state)
+                print("State: ", state, "Lookahead: ", lookahead)
+                print("Action: ",list(filter(lambda x: x[0] == state, self.action)))
+                print("Error: Unexpected symbol", lookahead, "at", cursor)
+                self.find_unexpected_symbol_and_notify(
+                    state, tokens[cursor].row, tokens[cursor].column
+                )
                 return
 
             action, tag = self.action[state, lookahead]

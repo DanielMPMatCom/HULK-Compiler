@@ -1,6 +1,6 @@
 # from cmp.tools.parsing import LR1Parser
 from hulk.parser.lr1 import LR1Parser
-from hulk.hulk_grammar import G
+from hulk.lexer.regex_table import G # dont delete this import or change it for another, we dont know why it works
 from hulk.hulk_ast import *
 from hulk.hulk_lexer import Lexer
 from hulk.lexer.regex_table import table
