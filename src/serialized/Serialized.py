@@ -1,5 +1,6 @@
 import dill
 import os
+import sys
 
 
 class Serialized:
@@ -9,6 +10,7 @@ class Serialized:
         pass
 
     def save_object(self, object, object_name):
+        sys.setrecursionlimit(10000)
         if not os.path.exists(object_name):
             os.makedirs(object_name)
         with open(f"./cache_hulk/{object_name}.plk", "wb") as file_pkl:

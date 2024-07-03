@@ -1,6 +1,8 @@
 # from cmp.tools.parsing import LR1Parser
 from hulk.parser.lr1 import LR1Parser
-from hulk.lexer.regex_table import G # dont delete this import or change it for another, we dont know why it works
+from hulk.lexer.regex_table import (
+    G,
+)  # dont delete this import or change it for another, we dont know why it works
 from hulk.hulk_ast import *
 from hulk.hulk_lexer import Lexer
 from hulk.lexer.regex_table import table
@@ -18,10 +20,12 @@ let z = x + y; """
 tokens = lexer(code_example)
 
 for token in tokens:
-    print(f'row: {token.row}, column: {token.column}, token type: {token.token_type}, lex: {token.lex}')
+    print(
+        f"row: {token.row}, column: {token.column}, token type: {token.token_type}, lex: {token.lex}"
+    )
 
 
-
+parser(tokens)
 
 
 # print("========== STATES ==========")

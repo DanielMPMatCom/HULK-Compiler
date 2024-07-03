@@ -7,15 +7,19 @@ from hulk.lexer.regex_grammar import G
 
 
 class Regex:
-    def __init__(self, regex: str, is_regex: bool = False):
+    def __init__(self, regex: str, is_regex: bool = False, parser=None):
         self.is_regex = is_regex
         self.regex = regex
+        self.parser = (
+            LR1Parser(G, verbose=False, load=False, save=False)
+            if parser is None
+            else parser
+        )
         self.automaton = self._build_automaton()
 
     def _build_automaton(self):
-        parser = LR1Parser(G, verbose=False, load=False, save=False)
         tokens = regex_tokenizer(self.regex, G, self.is_regex, skip_whitespaces=True)
-        parse, operations = parser(tokens=tokens)
+        parse, operations = self.parser(tokens=tokens)
         ast = evaluate_reverse_parse(parse, operations, tokens)
         nfa = ast.evaluate()
         dfa = nfa_to_dfa(nfa)

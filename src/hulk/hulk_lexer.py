@@ -1,19 +1,22 @@
 from hulk.utils import Token
 from hulk.lexer.regex import Regex
 from cmp.automata import State
-
+from hulk.lexer.regex_grammar import G
+from hulk.parser.lr1 import LR1Parser
 
 class Lexer:
     def __init__(self, table, eof):
         self.errors = []
         self.eof = eof
+        self.parser = LR1Parser(G, verbose=False, load=False, save=False)
         self.regexs = self._build_regexs(table)
         self.automaton = self._build_automaton()
+
 
     def _build_regexs(self, table):
         regexs = []
         for n, (token_type, regex, is_regex) in enumerate(table):
-            states = State.from_nfa(Regex(regex, is_regex).automaton)
+            states = State.from_nfa(Regex(regex, is_regex, self.parser).automaton)
             for v in states:
                 if v.final:
                     v.tag = (n, token_type)
