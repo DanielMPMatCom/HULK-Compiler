@@ -104,7 +104,7 @@ class TypeChecker():
         if ((ancestor_method.name != self.current_method.name) or\
         (not ancestor_method.return_type.conforms_to(self.current_method.return_type)) or\
         (len(ancestor_method.param_types) != len(self.current_method.param_types)) or\
-        (not method_type.conforms_to(impl_type) for method_type, impl_type in zip(ancestor_method.param_types, self.current_method.param_types))):
+        (not method_type.conforms_to(implicit_type) for method_type, implicit_type in zip(ancestor_method.param_types, self.current_method.param_types))):
             self.errors.append(SemanticError(f'Method {self.current_method.name} already defined in ancestor with different signature', node.line, node.column))
         self.current_method = None
         return return_type
