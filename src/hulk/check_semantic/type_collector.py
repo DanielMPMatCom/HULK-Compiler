@@ -24,10 +24,8 @@ class TypeCollector():
         str_type = self.context.create_type('String')
         str_type.set_parent(obj_type)
         str_type.define_method('size', [], [], num_type)
-        # str_type.define_method('next', [], [], bool_type)
-        # str_type.define_method('current', [], [], str_type)
         obj_type.define_method('equals', ['other'], [obj_type], bool_type)
-        # obj_type.define_method('toString', [], [], str_type)
+        obj_type.define_method('toString', [], [], str_type)
 
         self.context.create_function('print', ['value'], [obj_type], str_type)
         self.context.create_function('sqrt', ['value'], [num_type], num_type)
@@ -66,7 +64,7 @@ class TypeCollector():
             if node.identifier in self.context.types:
                 self.context.types[node.identifier] = ErrorType()
             else:
-                raise SemanticError(f'Type "{node.identifier}" is not defined.')
+                raise SemanticError(f'Type "{node.identifier}" is not defined.', node.line, node.column)
 
     @visitor.when(ProtocolDeclarationNode)
     def visit(self, node: ProtocolDeclarationNode):
@@ -77,4 +75,4 @@ class TypeCollector():
             if node.identifier in self.context.protocols:
                 self.context.protocols[node.identifier] = ErrorType()
             else:
-                raise SemanticError(f'Protocol "{node.identifier}" is not defined.')
+                raise SemanticError(f'Protocol "{node.identifier}" is not defined.', node.line, node.column)

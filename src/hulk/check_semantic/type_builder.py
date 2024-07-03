@@ -29,14 +29,14 @@ class TypeBuilder():
         self.current_type.param_names, self.current_type.param_types = self.param_names_and_types(node)
         
         if node.parent in ['Number', 'String', 'Bool']:
-            self.errors.append(SemanticError(f'Type {node.identifier} is inheriting from forbidden type {node.parent}.'))
+            self.errors.append(SemanticError(f'Type {node.identifier} is inheriting from forbidden type {node.parent}.', node.line, node.column))
         elif node.parent is not None:
             try:
                 parent : Type = self.context.get_type(node.parent)
                 current = parent
                 while current is not None:
                     if current.name == self.current_type.name:
-                        self.errors.append(SemanticError(f'Circular dependency inheritance {self.current_type.name} : {node.parent} : ... : {current.name}.'))
+                        self.errors.append(SemanticError(f'Circular dependency inheritance {self.current_type.name} : {node.parent} : ... : {current.name}.', node.line, node.column))
                         parent = ErrorType()
                         break
                     current = current.parent
@@ -70,7 +70,7 @@ class TypeBuilder():
                 return_type = ErrorType()
 
         try:
-            self.context.create_function(node.identfier, self.param_names, self.param_types, return_type)
+            self.context.create_function(node.identifier, self.param_names, self.param_types, return_type)
         except SemanticError as error:
             self.errors.append(str(error))
 
@@ -87,7 +87,7 @@ class TypeBuilder():
                 current = parent
                 while current is not None:
                     if current.name == self.current_type.name:
-                        self.errors.append(SemanticError(f'Circular dependency inheritance {self.current_type.name} : {node.parent} : ... : {current.name}.'))
+                        self.errors.append(SemanticError(f'Circular dependency inheritance {self.current_type.name} : {node.parent} : ... : {current.name}.', node.line, node.column))
                         parent = ErrorType()
                         break
                     current = current.parent
@@ -158,7 +158,7 @@ class TypeBuilder():
         for param_name in node.param_ids:
             param_type = node.param_types[node.param_types.index(param_name)]
             if param_name in names:
-                self.errors.append(SemanticError(f'Parameter {param_name} already declared.'))
+                self.errors.append(SemanticError(f'Parameter {param_name} already declared.', node.line, node.column))
                 types[names.index(param_name)] = ErrorType()
             else:
                 if param_type is None:

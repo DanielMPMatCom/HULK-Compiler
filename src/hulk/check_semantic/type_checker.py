@@ -6,8 +6,8 @@ class TypeChecker():
     def __init__(self, context, errors=None):
         self.context : Context = context
         self.errors: list[SemanticError] = [] if errors is None else errors
-        self.current_type = None
-        self.current_method = None
+        self.current_type : Type = None
+        self.current_method : Method = None
 
     @visitor.on('node')
     def visit(self, node):
