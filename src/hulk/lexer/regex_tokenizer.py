@@ -16,5 +16,7 @@ def regex_tokenizer(text:str, G:Grammar, is_regex:bool, skip_whitespaces:bool=Tr
         else:
             tokens.append(Token(char, G['symbol']))
 
+        # print(tokens[-1])
+
     tokens.append(Token('$', G.EOF))
     return tokens
