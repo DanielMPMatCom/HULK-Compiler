@@ -90,7 +90,7 @@ class Lexer:
 
             yield final_lex, token_type, row, column
 
-            row += len(final_lex)
+            column += len(final_lex)
 
         yield "$", self.eof, row, column
 

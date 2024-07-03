@@ -16,9 +16,9 @@ let y = 3;
 let z = x + y; """
 
 tokens = lexer(code_example)
-print(tokens)
 
-
+for token in tokens:
+    print(f'row: {token.row}, column: {token.column}, token type: {token.token_type}, lex: {token.lex}')
 
 
 
