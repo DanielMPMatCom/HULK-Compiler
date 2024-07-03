@@ -1,18 +1,23 @@
 from abc import ABC
 from typing import List, Tuple
 from cmp.ast import*
+from cmp.semantic import Scope
 
 
 
 #----------------------------------------------------------Level0---------------------------------------------------------#
 
 class Node:
-    pass
+    def __init__(self, line=None, column=None):
+        self.scope : Scope
+        self.line = line
+        self.column = column
 
 #----------------------------------------------------------Level1---------------------------------------------------------#
 
 class ProgramNode(Node):
     def __init__(self, declarations, expression):
+        Node.__init__()
         self.declarations = declarations
         self.expression = expression
 
@@ -46,7 +51,7 @@ class TypeDeclarationNode(DeclarationNode):
         self.type_parent_args = type_parent_args
 
 class FunctionDeclarationNode(DeclarationNode):
-    def __init__(self, identfier, params, expression, type=None):
+    def __init__(self, identifier, params, expression, type=None):
         DeclarationNode.__init__(self)
         if len(params) > 0:
             params_ids, params_types = [(param[0], param[1]) for param in params]
@@ -54,7 +59,7 @@ class FunctionDeclarationNode(DeclarationNode):
             params_ids, params_types = [], []
         self.params_ids = params_ids
         self.params_types = params_types
-        self.identfier = identfier
+        self.identifier = identifier
         self.expression = expression
         self.type = type
 
@@ -101,6 +106,7 @@ class VectorNode(ExpressionNode):
     def __init__(self, elements_type):
         DeclarationNode.__init__(self)
         self.elements_type = elements_type
+        
 class VariableDeclarationNode(DeclarationNode):
     def __init__(self, identifier, expression, type=None):
         DeclarationNode.__init__(self)
@@ -181,12 +187,14 @@ class AttributeCallNode(ExpressionNode):
     def __init__(self, object_identifier, attribute_idetifier):
         ExpressionNode.__init__(self)
         self.object_identifier = object_identifier
-        self.attribute_idetifier = attribute_idetifier
+        self.attribute_identifier = attribute_idetifier
 
 class BaseCallNode(ExpressionNode):
     def __init__(self, args):
         ExpressionNode.__init__(self)
         self.args = args
+        self.method_name = None
+        self.parent_type = None
 
 class IndexNode(ExpressionNode):
     def __init__(self, object, index):
@@ -194,13 +202,13 @@ class IndexNode(ExpressionNode):
         self.object = object
         self.index = index
 
-class UnaryExpressionNode(ExpressionNode):
+class UnaryExpressionNode(ExpressionNode, ABC):
     def __init__(self, expression):
         ExpressionNode.__init__(self)
         self.expression = expression
         self.operator = None
 
-class BinaryExpressionNode(ExpressionNode):
+class BinaryExpressionNode(ExpressionNode, ABC):
     def __init__(self, left_expression, right_expression):
         ExpressionNode.__init__(self)
         self.left_expression = left_expression
@@ -219,7 +227,7 @@ class InitializeVectorListComprehensionNode(ExpressionNode):
         self.variable_identifier = variable_identifier
         self.iterable_expression = iterable_expression
 
-class AtomNode(ExpressionNode):
+class AtomNode(ExpressionNode, ABC):
     def __init__(self, lexeme):
         ExpressionNode.__init__(self)
         self.lexeme = lexeme
