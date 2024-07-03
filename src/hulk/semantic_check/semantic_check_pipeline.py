@@ -1,6 +1,6 @@
-from src.hulk.check_semantic.type_collector import TypeCollector
-from src.hulk.check_semantic.type_builder import TypeBuilder
-from src.hulk.check_semantic.type_checker import TypeChecker
+from src.hulk.semantic_check.type_collector import TypeCollector
+from src.hulk.semantic_check.type_builder import TypeBuilder
+from src.hulk.semantic_check.type_checker import TypeChecker
 
 def semantic_check_pipeline(ast, verbose=False):
     if verbose:
