@@ -1,6 +1,7 @@
 from src.hulk.semantic_check.type_collector import TypeCollector
 from src.hulk.semantic_check.type_builder import TypeBuilder
 from src.hulk.semantic_check.type_checker import TypeChecker
+from src.hulk.semantic_check.variable_collector import VariableCollector
 
 def semantic_check_pipeline(ast, verbose=False):
     if verbose:
@@ -24,6 +25,18 @@ def semantic_check_pipeline(ast, verbose=False):
         print(']')
         print('Context:')
         print(context)
+        print("============== COLLECTING VARIABLES =================")
+    variable_collector = VariableCollector(context, errors)
+    scope = variable_collector.visit(ast)
+    if verbose:
+        print('Errors: [')
+        for error in errors:
+            print('\t', error)
+        print(']')
+        print('Context:')
+        print(context)
+        print('Scope:')
+        print(scope)
         print("============== CHECKING TYPES =================")
     type_checker = TypeChecker(context, errors)
     scope = type_checker.visit(ast)

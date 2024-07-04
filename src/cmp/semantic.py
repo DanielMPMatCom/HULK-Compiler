@@ -14,9 +14,10 @@ class SemanticError(Exception):
 #region Structures
 
 class Attribute:
-    def __init__(self, name, typex):
+    def __init__(self, name, typex, current_node=None):
         self.name = name
         self.type = typex
+        self.current_node = current_node
 
     def __str__(self):
         return f'[attrib] {self.name} : {self.type.name};'
@@ -25,11 +26,12 @@ class Attribute:
         return str(self)
 
 class Method:
-    def __init__(self, name, param_names, params_types, return_type):
+    def __init__(self, name, param_names, params_types, return_type, current_node=None):
         self.name = name
         self.param_names = param_names
         self.param_types = params_types
         self.return_type = return_type
+        self.current_node = current_node
 
     def can_be_replaced_by(self, other):
         if self.name != other.name:
@@ -56,13 +58,14 @@ class Method:
             other.param_types == self.param_types
 
 class Type:
-    def __init__(self, name:str):
+    def __init__(self, name:str, current_node=None):
         self.name = name
         self.attributes : list[Attribute] = []
         self.methods : list[Method] = []
         self.param_names = []
         self.param_types = []
         self.parent = None
+        self.current_node = current_node
 
     def set_parent(self, parent):
         if self.parent is not None:
@@ -80,11 +83,11 @@ class Type:
             except SemanticError:
                 raise SemanticError(f'Attribute "{name}" is not defined in {self.name}.')
 
-    def define_attribute(self, name:str, typex):
+    def define_attribute(self, name:str, typex, current_node=None):
         try:
             self.get_attribute(name)
         except SemanticError:
-            attribute = Attribute(name, typex)
+            attribute = Attribute(name, typex, current_node)
             self.attributes.append(attribute)
             return attribute
         else:
@@ -101,10 +104,10 @@ class Type:
             except SemanticError:
                 raise SemanticError(f'Method "{name}" is not defined in {self.name}.')
 
-    def define_method(self, name:str, param_names:list, param_types:list, return_type):
+    def define_method(self, name:str, param_names:list, param_types:list, return_type, current_node=None):
         if name in (method.name for method in self.methods):
             raise SemanticError(f'Method "{name}" already defined in {self.name}')
-        method = Method(name, param_names, param_types, return_type)
+        method = Method(name, param_names, param_types, return_type, current_node)
         self.methods.append(method)
         return method
 
@@ -119,6 +122,19 @@ class Type:
         for method in self.methods:
             plain[method.name] = (method, self)
         return plain.values() if clean else plain
+    
+    def set_parameters(self):
+        param_names, param_types = self.get_parameters()
+        self.param_names = param_names
+        self.param_types = param_types
+
+    def get_parameters(self):
+        if (self.param_names is None or self.param_types is None) and self.parent is not None:
+            param_names, param_types = self.parent.get_parameters()
+        else:
+            param_names = self.param_names
+            param_types = self.param_types
+        return param_names, param_types
 
     def conforms_to(self, other):
         if isinstance(other, Type):
@@ -148,19 +164,24 @@ class Type:
     def __repr__(self):
         return str(self)
 class Function:
-    def __init__(self, name, param_names, param_types, return_type, body=None):
+    def __init__(self, name, param_names, param_types, return_type, current_node=None, body=None):
         self.name = name
         self.param_names = param_names
         self.param_types = param_types
         self.return_type = return_type
         self.body = body
+        self.current_node = current_node
+
+    def __eq__(self, other):
+        return other.name == self.name and other.return_type == self.return_type and other.param_types == self.param_types
 
     
 class Protocol:
-    def __init__(self, name):
+    def __init__(self, name, current_node=None):
         self.name = name
         self.methods = [Method]
         self.parent = None
+        self.current_node = current_node
 
     def get_method(self, name: str):
         try:
@@ -173,10 +194,10 @@ class Protocol:
             except SemanticError:
                 raise SemanticError(f'Method "{name}" is not defined in {self.name}.')
             
-    def define_method(self, name:str, param_names:list, param_types:list, return_type):
+    def define_method(self, name:str, param_names:list, param_types:list, return_type, current_node=None):
         if name in (method.name for method in self.methods):
             raise SemanticError(f'Method "{name}" already defined in {self.name}')
-        method = Method(name, param_names, param_types, return_type)
+        method = Method(name, param_names, param_types, return_type, current_node)
         self.methods.append(method)
         return method
 
@@ -294,12 +315,12 @@ class Context:
         self.functions = {}
         self.protocols = {}
 
-    def create_type(self, name:str):
+    def create_type(self, name:str, current_node=None):
         if name in self.types:
             raise SemanticError(f'Type with the same name ({name}) already in context.')
         if name in self.protocols:
             raise SemanticError(f'Protocol with the same name ({name}) already in context.')
-        type_ = self.types[name] = Type(name)
+        type_ = self.types[name] = Type(name, current_node)
         return type_
 
     def get_type(self, name:str, params_amount=None):
@@ -313,7 +334,7 @@ class Context:
         except KeyError:
             raise SemanticError(f'Type "{name}" is not defined.')
     
-    def create_function(self, name:str, param_names:list[str], param_types:list, return_type, body : list = []):
+    def create_function(self, name:str, param_names:"list[str]", param_types:list, return_type, body : list = []):
         if name in self.types:
             raise SemanticError(f'Function with the same name ({name}) already in context.')
         function = self.functions[name] = Function(name, param_names, param_types, return_type, body)
@@ -359,7 +380,11 @@ class VariableInfo:
     def __init__(self, name, vtype, value = None):
         self.name = name
         self.type = vtype
+        self.name_for_CodeGen = None
         self.value = value
+    
+    def set_name_for_CodeGen(self, name):
+        self.name_for_CodeGen = name
     def update(self, new_value = None): 
         self.value = new_value
     
@@ -430,6 +455,12 @@ class Scope:
             if self.parent is not None:
                 return self.parent.get_global_function_info(fname, n)
         return local
+    
+    def get_all_variables(self):
+        variables = [var for var in self.local_vars]
+        if self.paret is not None:
+            variables.extend(self.parent.get_all_variables())
+        return variables
 
 #endregion
 

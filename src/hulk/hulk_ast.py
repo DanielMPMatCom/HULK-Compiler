@@ -236,16 +236,16 @@ class AtomNode(ExpressionNode, ABC):
 #-------------------------------------------------------Level3------------------------------------------------------------#
 
 
-class NumNode(AtomNode, ABC):
+class NumNode(AtomNode):
     pass
 
-class StringNode(AtomNode, ABC):
+class StringNode(AtomNode):
     pass
 
-class BoolNode(AtomNode, ABC):
+class BoolNode(AtomNode):
     pass
 
-class IDNode(AtomNode, ABC):
+class IDNode(AtomNode):
     pass
 
 class BoolBinaryOpNode(BinaryExpressionNode, ABC):
