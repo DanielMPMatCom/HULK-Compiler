@@ -5,8 +5,12 @@ from src.cmp.visitor import visitor
 import math
 import random
 
+def Print(x):
+    print (x)
+    return x
+
 built_in_func = {
-    'print': lambda x: print(x),
+    'print': lambda x: Print(x),
     'sqrt': lambda x: math.sqrt(x),
     'sin': lambda x: math.sin(x),
     'cos': lambda x: math.cos(x),
@@ -32,10 +36,8 @@ binary_operators = {
     '!=': lambda x, y: x != y,
     '>=': lambda x, y: x >= y,
     '<=': lambda x, y: x <= y,
-    # '@@': lambda x, y:
-    # '=>': lambda x, y:
-    # '**': lambda x, y:
-
+    '**': lambda x, y: x ** y,
+    '@@': lambda x, y: x + ' ' + y,
 }
 
 unary_operators = {
@@ -97,7 +99,7 @@ class Interpeter():
         for i, condition in enumerate(node.conditions):
             if self.visit(condition):
                 return self.visit(node.expressions[i])
-            return self.visit(node.else_expression)
+        return self.visit(node.else_expression)
         
     @visitor.when(WhileNode)
     def visit(self, node:WhileNode):
@@ -128,10 +130,7 @@ class Interpeter():
     
     @visitor.when(BoolNode)
     def visit(self, node:BoolNode):
-        if node.lexeme == 'True':
-            return True
-        else:
-            return False
+        return node.lexeme is 'true'
             
     @visitor.when(IDNode)
     def visit(self, node:IDNode):
@@ -185,7 +184,9 @@ class Interpeter():
             evaluation = self.visit(expression)
         return evaluation
         
-    
+    @visitor.when(TypeDeclarationNode)
+    def visit(self, node:TypeDeclarationNode):
+        pass
 
     
 
