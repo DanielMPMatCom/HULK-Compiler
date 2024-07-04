@@ -148,11 +148,12 @@ class Type:
     def __repr__(self):
         return str(self)
 class Function:
-    def __init__(self, name, param_names, param_types, return_type):
+    def __init__(self, name, param_names, param_types, return_type, body=None):
         self.name = name
         self.param_names = param_names
         self.param_types = param_types
         self.return_type = return_type
+        self.body = body
 
     
 class Protocol:
@@ -312,10 +313,10 @@ class Context:
         except KeyError:
             raise SemanticError(f'Type "{name}" is not defined.')
     
-    def create_function(self, name:str, param_names:list, param_types:list, return_type):
+    def create_function(self, name:str, param_names:list[str], param_types:list, return_type, body : list = []):
         if name in self.types:
             raise SemanticError(f'Function with the same name ({name}) already in context.')
-        function = self.functions[name] = Function(name, param_names, param_types, return_type)
+        function = self.functions[name] = Function(name, param_names, param_types, return_type, body)
         return function
     
     def get_function_by_name(self, name:str):
@@ -355,9 +356,12 @@ class Context:
     def __repr__(self):
         return str(self)
 class VariableInfo:
-    def __init__(self, name, vtype):
+    def __init__(self, name, vtype, value = None):
         self.name = name
         self.type = vtype
+        self.value = value
+    def update(self, new_value = None): 
+        self.value = new_value
     
 #endregion
 
@@ -365,10 +369,10 @@ class VariableInfo:
 #region Scope
 class Scope:
     def __init__(self, parent=None):
-        self.local_vars = []
-        self.local_funcs = []
-        self.parent = parent
-        self.children = []
+        self.local_vars : list[VariableInfo] = []
+        self.local_funcs : list[Function]= []
+        self.parent : Scope = parent
+        self.children : list[Scope] = []
         self.var_index_at_parent = 0 if parent is None else len(parent.local_vars)
         self.func_index_at_parent = 0 if parent is None else len(parent.local_funcs)
         
@@ -407,7 +411,7 @@ class Scope:
                 return var
         return None
     
-    def get_local_function_info(self, fname, n) -> VariableInfo:
+    def get_local_function_info(self, fname, n) -> Function:
         for func in self.local_funcs:
             if func.name == fname and len(func.params) == n:
                 return func
@@ -420,7 +424,7 @@ class Scope:
                 return self.parent.get_global_variable_info(vname)
         return local
 
-    def get_global_function_info(self, fname, n) -> VariableInfo:
+    def get_global_function_info(self, fname, n) -> Function:
         local = self.get_local_function_info(fname, n)
         if local is None:
             if self.parent is not None:
