@@ -67,11 +67,11 @@ upper_letters = "(" + "|".join(chr(n) for n in range(ord("A"), ord("Z") + 1)) + 
 
 
 regexs = [
+    (f"(True)|(False)", G["bool"]),
     (
         f"({lower_letters}|{upper_letters}|_)({non_negative}|{lower_letters}|{upper_letters}|_)*",
         G["id"],
     ),
-    (f"(True)|(False)", G["bool"]),
     (
         f"{positive}{non_negative}*|({positive}{non_negative}.{non_negative}*)|({non_negative}.{non_negative}*)",
         G["num"],
