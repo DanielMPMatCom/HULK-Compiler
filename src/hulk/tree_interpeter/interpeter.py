@@ -178,6 +178,14 @@ class Interpeter():
     def visit(self, node:NotUnaryOpNode):
         return self.unary_operation(node)
     
+    @visitor.when(ExpressionBlockNode)
+    def visit(self, node:ExpressionBlockNode):
+        evaluation = None
+        for expression in node.expressions:
+            evaluation = self.visit(expression)
+        return evaluation
+        
+    
 
     
 
