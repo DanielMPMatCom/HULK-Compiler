@@ -18,7 +18,7 @@ class Regex:
         self.automaton = self._build_automaton()
 
     def _build_automaton(self):
-        tokens = regex_tokenizer(self.regex, G, self.is_regex, skip_whitespaces=True)
+        tokens = regex_tokenizer(self.regex, G, self.is_regex, skip_whitespaces=False)
         parse, operations = self.parser(tokens=tokens)
         ast = evaluate_reverse_parse(parse, operations, tokens)
         nfa = ast.evaluate()

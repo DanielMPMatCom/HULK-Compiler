@@ -77,7 +77,7 @@ regexs = [
         G["num"],
     ),
     (
-        f'"({lower_letters}|{upper_letters}|_)({lower_letters}|{upper_letters}|{non_negative}|_)*"',
+        f'"({lower_letters}|{upper_letters}|{non_negative}|_| )*"',
         G["str"],
     ),
 ]
