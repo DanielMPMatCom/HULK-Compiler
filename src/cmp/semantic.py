@@ -334,10 +334,10 @@ class Context:
         except KeyError:
             raise SemanticError(f'Type "{name}" is not defined.')
     
-    def create_function(self, name:str, param_names:"list[str]", param_types:list, return_type, body : list = []):
+    def create_function(self, name:str, param_names:"list[str]", param_types:list, return_type, current_node=None, body : list = []):
         if name in self.types:
             raise SemanticError(f'Function with the same name ({name}) already in context.')
-        function = self.functions[name] = Function(name, param_names, param_types, return_type, body)
+        function = self.functions[name] = Function(name, param_names, param_types, return_type, current_node=current_node, body=body)
         return function
     
     def get_function_by_name(self, name:str):
@@ -385,6 +385,7 @@ class VariableInfo:
     
     def set_name_for_CodeGen(self, name):
         self.name_for_CodeGen = name
+        
     def update(self, new_value = None): 
         self.value = new_value
     
@@ -409,12 +410,6 @@ class Scope:
     def define_variable(self, vname, vtype):
         if not self.is_var_globally_defined(vname):
             self.local_vars.append(VariableInfo(vname, vtype))
-            return True
-        return False
-    
-    def define_function(self, fname, params):
-        if not self.is_func_globally_defined(fname, len(params)):
-            self.local_funcs.append(Function(fname, params))
             return True
         return False
 
