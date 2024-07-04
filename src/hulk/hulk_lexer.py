@@ -79,7 +79,8 @@ class Lexer:
 
             if len(final_lex) == 0:
                 self.errors.append(f"Invalid token at line: {row}, column: {column}")
-                break
+                text = text[1:]
+                continue
 
             try:
                 n, token_type = min(final.tag)
