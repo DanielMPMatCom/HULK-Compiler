@@ -12,7 +12,9 @@ class ShiftReduceParser:
         self.verbose = verbose
         self.action = {}
         self.goto = {}
-        print(" LOADING PARSING ...")
+        self.errors = []
+
+        print("LOADING PARSING ...")
         serialized_instance = Serialized()
         if load:
             try:
@@ -28,7 +30,7 @@ class ShiftReduceParser:
                         tag = list(filter(lambda x: str(x) == str(tag), productions))[0]
 
                     self.action[state, G[str(symbol)]] = action, tag
-
+                print(self.action)
                 stored_goto = serialized_instance.load_object("goto")
 
                 for key, value in stored_goto.items():
@@ -45,37 +47,22 @@ class ShiftReduceParser:
         if save:
             serialized_instance.save_object(self.action, "action")
             serialized_instance.save_object(self.goto, "goto")
-        
+
         print("PARSER LOADED OK!")
 
     def _build_parsing_table(self):
         raise NotImplementedError()
 
     def notify_unexpected_symbols(self, current_token, expected_symbol):
-        print(
-            "Unexpected symbol",
-            current_token.token_type,
-            "At row ",
-            current_token.row,
-            " column ",
-            current_token.column,
-            ", value ",
-            current_token.lex,
-            ". Expected",
-            expected_symbol,
-        )
+        error = f"Unexpected symbol {current_token.token_type} with value {current_token.lex}, At row {current_token.row} and column {current_token.column}. Expected {expected_symbol}"
+        self.errors.append(error)
+        return
 
     def find_unexpected_symbol_and_notify(self, state, token):
-        print(
-            "Unexpected symbol",
-            token.lex,
-            " at row ",
-            token.row,
-            " and column",
-            token.column,
-        )
-        posibilities = list(filter(lambda x: x[0] == state, self.action.keys()))
-        print("Posibilities result ", [x[1] for x in posibilities])
+        error = f"Unexpected symbol {token.lex} at row {token.row} and column {token.column}"
+        possibilities = list(filter(lambda x: x[0] == state, self.action.keys()))
+        error += " Possibilities result " + str([x[1] for x in possibilities])
+        self.errors.append(error)
 
     def trackSymbols(self, state, lookahead):
         filtes = list(filter(lambda x: x[0] == state, self.action))
@@ -100,7 +87,24 @@ class ShiftReduceParser:
             return (state, lookahead)
         return (state, filters[0][1])
 
+    def force_ok_action(self):
+        ok_action, lookahead = list(
+            filter(lambda x: x[1] == self.G.EOF, self.action.keys())
+        )[0]
+
+        return (ok_action, lookahead)
+
+    def reset_state(self, w, cursor, state):
+        while cursor < len(w) and w[cursor] != self.G.EOF:
+            cursor += 1
+            if (state, w[cursor]) in self.action:
+                return (state, cursor)
+            elif (0, w[cursor]) in self.action:
+                return (0, cursor)
+        return (None, None)
+
     def __call__(self, tokens):
+        self.errors = []
         stack = [0]
         cursor = 0
         output = []
@@ -117,7 +121,11 @@ class ShiftReduceParser:
             # Your code here!!! (Detect error)
             if (state, lookahead) not in self.action:
                 self.find_unexpected_symbol_and_notify(state, tokens[cursor])
-                return
+                # state, cursor = self.reset_state(w, cursor, state)
+                # if state is None or cursor is None:
+                #     return [], []
+                # lookahead = w[cursor]
+                return [], []
 
             action, tag = self.action[state, lookahead]
 
@@ -159,7 +167,7 @@ class ShiftReduceParser:
                         "Possible symbols are",
                         list(filter(lambda x: x[0] == state, self.goto)),
                     )
-                    return
+                    return [], []
                 output.append(production)
                 operations.append(ShiftReduceParser.REDUCE)
 

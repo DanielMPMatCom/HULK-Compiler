@@ -1,7 +1,5 @@
 from hulk.parser.shift_reduce import ShiftReduceParser
-# from cmp.tools.parsing import ShiftReduceParser
 from hulk.parser.automaton import build_LR1_automaton
-
 
 class LR1Parser(ShiftReduceParser):
 

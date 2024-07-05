@@ -8,7 +8,7 @@ class Lexer:
     def __init__(self, table, eof):
         self.errors = []
         self.eof = eof
-        self.parser = LR1Parser(G, verbose=False, load=False, save=False)
+        self.parser = LR1Parser(G)
         self.regexs = self._build_regexs(table)
         self.automaton = self._build_automaton()
 

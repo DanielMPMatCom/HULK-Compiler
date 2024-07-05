@@ -1,7 +1,7 @@
 import io, os, sys, types
 
 from IPython import get_ipython
-from nbformat import read
+from nb import read
 from IPython.core.interactiveshell import InteractiveShell
 
 def find_notebook(fullname, path=None):
