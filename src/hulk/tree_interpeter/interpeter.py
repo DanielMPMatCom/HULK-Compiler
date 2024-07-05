@@ -192,7 +192,8 @@ class Interpeter:
 
 # AsNode(ExpressionNode):
     @visitor.when(AsNode)
-    def visit(self, node: AsNode)
+    def visit(self, node: AsNode):
+        pass
 
 # FunctionCallNode(ExpressionNode):
     @visitor.when(FunctionCallNode)
