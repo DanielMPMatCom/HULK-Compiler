@@ -31,7 +31,7 @@ class TypeChecker():
         if isinstance(node.parent, ErrorType):
             return
         
-        self.context.save_id_type(node)
+        # self.context.save_id_type(node)
         
         parent_params = self.current_type.parent.param_types
         parent_args = [self.visit(arg) for arg in node.type_parent_args]

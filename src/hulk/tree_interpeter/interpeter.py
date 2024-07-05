@@ -46,7 +46,7 @@ binary_operators = {
 unary_operators = {"!": lambda x: not x, "-": lambda x: -x}
 
 
-class Interpeter:
+class Interpreter:
     def __init__(self, context, errors=[]):
         self.context: Context = context
         self.errors: list = errors
@@ -71,12 +71,12 @@ class Interpeter:
         for declaration in node.declarations:
             self.visit(declaration)
 
-# TypeDeclarationNode(DeclarationNode):
+    # TypeDeclarationNode(DeclarationNode):
     @visitor.when(TypeDeclarationNode)
     def visit(self, node: TypeDeclarationNode):
         return node
 
-# FunctionDeclarationNode(DeclarationNode):
+    # FunctionDeclarationNode(DeclarationNode):
     @visitor.when(FunctionDeclarationNode)
     def visit(self, node: FunctionDeclarationNode):
         # function = node.scope.get_local_function_info(
@@ -86,35 +86,35 @@ class Interpeter:
         function.body = node.expression
         return
 
-# ProtocolDeclarationNode(DeclarationNode):
+    # ProtocolDeclarationNode(DeclarationNode):
     @visitor.when(ProtocolDeclarationNode)
-    def visit(self, node : ProtocolDeclarationNode):
+    def visit(self, node: ProtocolDeclarationNode):
         return
-       
-# MethodNode(DeclarationNode):
+
+    # MethodNode(DeclarationNode):
     @visitor.when(MethodNode)
     def visit(self, node: MethodNode):
         return
 
-# AttributeNode(DeclarationNode):
+    # AttributeNode(DeclarationNode):
     @visitor.when(AttributeNode)
     def visit(self, node: AttributeNode):
-        node.scope.define_variable(f'self.{node.identifier}')
+        node.scope.define_variable(f"self.{node.identifier}")
         value = self.visit(node.expression)
-        var = node.scope.get_local_variable_info(f'self.{node.identifier}')
+        var = node.scope.get_local_variable_info(f"self.{node.identifier}")
         var.update(value)
 
-# ProtocolMethodSignatureNode(DeclarationNode):
+    # ProtocolMethodSignatureNode(DeclarationNode):
     @visitor.when(ProtocolMethodSignatureNode)
     def visit(self, node: ProtocolMethodSignatureNode):
-       return
+        return
 
-# VectorNode(ExpressionNode):
+    # VectorNode(ExpressionNode):
     @visitor.when(VectorNode)
     def visit(self, node: VectorNode):
-       return
-    
-# VariableDeclarationNode(DeclarationNode):
+        return
+
+    # VariableDeclarationNode(DeclarationNode):
     @visitor.when(VariableDeclarationNode)
     def visit(self, node: VariableDeclarationNode):
         variable = node.scope.get_local_variable_info(node.identifier)
@@ -122,7 +122,7 @@ class Interpeter:
         variable.update(value)
         return
 
-# ExpressionBlockNode(ExpressionNode):
+    # ExpressionBlockNode(ExpressionNode):
     @visitor.when(ExpressionBlockNode)
     def visit(self, node: ExpressionBlockNode):
         evaluation = None
@@ -130,14 +130,14 @@ class Interpeter:
             evaluation = self.visit(expression)
         return evaluation
 
-# LetInNode(ExpressionNode):
+    # LetInNode(ExpressionNode):
     @visitor.when(LetInNode)
     def visit(self, node: LetInNode):
         for declaration in node.assignment_list:
             self.visit(declaration)
         return self.visit(node.expression)
 
-# IfElseNode(ExpressionNode):
+    # IfElseNode(ExpressionNode):
     @visitor.when(IfElseNode)
     def visit(self, node: IfElseNode):
         for i, condition in enumerate(node.conditions):
@@ -145,15 +145,15 @@ class Interpeter:
                 return self.visit(node.expressions[i])
         return self.visit(node.else_expression)
 
-# WhileNode(ExpressionNode): Explotar si evaluation es None
+    # WhileNode(ExpressionNode): Explotar si evaluation es None
     @visitor.when(WhileNode)
     def visit(self, node: WhileNode):
         evaluation = None
         while self.visit(node.condition):
             evaluation = self.visit(node.expression)
-        return evaluation    
-    
-# ForNode(ExpressionNode):
+        return evaluation
+
+    # ForNode(ExpressionNode):
     @visitor.when(ForNode)
     def visit(self, node: ForNode):
         evaluation = None
@@ -163,46 +163,52 @@ class Interpeter:
             evaluation = self.visit(node.expression)
         return evaluation
 
-# DestructiveOperationNode(ExpressionNode):
+    # DestructiveOperationNode(ExpressionNode):
     @visitor.when(DestructiveOperationNode)
     def visit(self, node: DestructiveOperationNode):
-        vname = node.destiny # Revisar si esto es el identifier, asumimos que si
+        vname = node.destiny  # Revisar si esto es el identifier, asumimos que si
         variable = node.scope.get_global_variable_info(vname)
         value = self.visit(node.expression)
         variable.update(value)
 
-# NewTypeNode(ExpressionNode):
+    # NewTypeNode(ExpressionNode):
     @visitor.when(NewTypeNode)
     def visit(self, node: NewTypeNode):
-        type_node = self.context.id_to_type[node.identifier]
-        type_node : TypeDeclarationNode = copy.deepcopy(type_node)
+        type_node = self.context.get_type(node.identifier, len(node.args))
+        type_node: TypeDeclarationNode = copy.deepcopy(type_node)
 
-        scope = type_node.scope
+        if type_node.parent:
+            type_parent: Type = self.context.get_type(type_node.parent)
+            parent_definition: TypeDeclarationNode = type_parent.current_node
 
-        for i, vname in enumerate(type_node.params_ids):
-            scope.define_variable(vname, None)
-            variable = scope.get_global_variable_info(vname)
-            value = self.visit(node.args[i])
-            variable.update(value)
+            for i, vname in enumerate(parent_definition.params_ids):
+                node.scope.define_variable(vname=vname, vtype=None)
+                value = self.visit(node.args[i])
+                node.scope.get_local_variable_info(vname=vname).update(value)
+            
+            for p_attr in parent_definition.attributes:
+                node.scope.define_variable(p_attr.identifier, None)
+                value = 
+                
 
-# IsNode(ExpressionNode):
+
+    # IsNode(ExpressionNode):
     @visitor.when(IsNode)
     def visit(self, node: IsNode):
         pass
 
-# AsNode(ExpressionNode):
+    # AsNode(ExpressionNode):
     @visitor.when(AsNode)
     def visit(self, node: AsNode):
         pass
 
-# FunctionCallNode(ExpressionNode):
+    # FunctionCallNode(ExpressionNode):
     @visitor.when(FunctionCallNode)
     def visit(self, node: FunctionCallNode):
-        
-        
-        params = [self.visit(param) for param in node.args]    
-        
-        if node.identifier in built_in_func:  
+
+        params = [self.visit(param) for param in node.args]
+
+        if node.identifier in built_in_func:
             return built_in_func[node](tuple(params))
 
         function: Function = self.context.get_function_by_name(node.identifier)
@@ -214,84 +220,84 @@ class Interpeter:
 
         return self.visit(function.body)
 
-# MethodCallNode(ExpressionNode):
+    # MethodCallNode(ExpressionNode):
 
-# AttributeCallNode(ExpressionNode):
+    # AttributeCallNode(ExpressionNode):
 
-# BaseCallNode(ExpressionNode):
+    # BaseCallNode(ExpressionNode):
 
-# IndexNode(ExpressionNode):
+    # IndexNode(ExpressionNode):
 
-# UnaryExpressionNode(ExpressionNode, ABC):
+    # UnaryExpressionNode(ExpressionNode, ABC):
 
-# BinaryExpressionNode(ExpressionNode, ABC):
+    # BinaryExpressionNode(ExpressionNode, ABC):
 
-# InitializeVectorNode(ExpressionNode):
+    # InitializeVectorNode(ExpressionNode):
 
-# InitializeVectorListComprehensionNode(ExpressionNode):
+    # InitializeVectorListComprehensionNode(ExpressionNode):
 
-# NumNode(AtomNode):
+    # NumNode(AtomNode):
     @visitor.when(NumNode)
     def visit(self, node: NumNode):
         return float(node.lexeme)
 
-# StringNode(AtomNode):
+    # StringNode(AtomNode):
     @visitor.when(StringNode)
     def visit(self, node: StringNode):
         return node.lexeme[1:-1]
 
-# BoolNode(AtomNode):
+    # BoolNode(AtomNode):
     @visitor.when(BoolNode)
     def visit(self, node: BoolNode):
         return node.lexeme is "true"
 
-# IDNode(AtomNode):
+    # IDNode(AtomNode):
     @visitor.when(IDNode)
     def visit(self, node: IDNode):
         return node.lexeme
 
-# OrNode(BoolBinaryOpNode):
-# AndNode(BoolBinaryOpNode):
+    # OrNode(BoolBinaryOpNode):
+    # AndNode(BoolBinaryOpNode):
     @visitor.when(BoolBinaryOpNode)
     def visit(self, node: BoolBinaryOpNode):
         return self.binary_operation(node)
 
-# EqualNode(EqualityBinaryOpNode):
+    # EqualNode(EqualityBinaryOpNode):
     @visitor.when(EqualityBinaryOpNode)
     def visit(self, node: EqualityBinaryOpNode):
         return self.binary_operation(node)
 
-# NonEqualNode(InequalityBinaryOpNode):
-# LessThanNode(InequalityBinaryOpNode):
-# LessEqualNode(InequalityBinaryOpNode):
-# GreaterThanNode(InequalityBinaryOpNode):
-# GreaterEqualNode(InequalityBinaryOpNode):
+    # NonEqualNode(InequalityBinaryOpNode):
+    # LessThanNode(InequalityBinaryOpNode):
+    # LessEqualNode(InequalityBinaryOpNode):
+    # GreaterThanNode(InequalityBinaryOpNode):
+    # GreaterEqualNode(InequalityBinaryOpNode):
     @visitor.when(InequalityBinaryOpNode)
     def visit(self, node: InequalityBinaryOpNode):
         return self.binary_operation(node)
 
-# ConcatNode(StringBinaryOpNode):
-# SpacedConcatNode(StringBinaryOpNode):
+    # ConcatNode(StringBinaryOpNode):
+    # SpacedConcatNode(StringBinaryOpNode):
     @visitor.when(StringBinaryOpNode)
     def visit(self, node: StringBinaryOpNode):
         return self.binary_operation(node)
 
-# PlusNode(ArithmeticBinaryOpNode):
-# MinusNode(ArithmeticBinaryOpNode):
-# StarNode(ArithmeticBinaryOpNode):
-# DivNode(ArithmeticBinaryOpNode):
-# ModNode(ArithmeticBinaryOpNode):
-# PowNode(ArithmeticBinaryOpNode):
+    # PlusNode(ArithmeticBinaryOpNode):
+    # MinusNode(ArithmeticBinaryOpNode):
+    # StarNode(ArithmeticBinaryOpNode):
+    # DivNode(ArithmeticBinaryOpNode):
+    # ModNode(ArithmeticBinaryOpNode):
+    # PowNode(ArithmeticBinaryOpNode):
     @visitor.when(ArithmeticBinaryOpNode)
     def visit(self, node: ArithmeticBinaryOpNode):
         return self.binary_operation(node)
 
-# MinusNode(SignUnaryOpNode):
+    # MinusNode(SignUnaryOpNode):
     @visitor.when(SignUnaryOpNode)
     def visit(self, node: SignUnaryOpNode):
         return self.unary_operation(node)
 
-# NotNode(NotUnaryOpNode):
+    # NotNode(NotUnaryOpNode):
     @visitor.when(NotUnaryOpNode)
     def visit(self, node: NotUnaryOpNode):
         return self.unary_operation(node)
