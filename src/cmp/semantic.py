@@ -2,7 +2,6 @@ import itertools as itt
 from collections import OrderedDict
 from hulk.hulk_ast import*
 from typing import List
-from hulk.semantic_check.semantic_utils import TypeDTONode
 
 #region Errors
 class SemanticError(Exception):
