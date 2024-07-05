@@ -119,7 +119,7 @@ class VariableCollector:
     def visit(self, node : ForNode, scope : Scope = None):
         node.scope = scope
         expression_scope = scope.create_child_scope()
-        expression_scope.define_variable(node.identifier, UndefinedType())
+        expression_scope.define_variable(node.iterator, UndefinedType())
         self.visit(node.iterable_expression, scope.create_child_scope())
         self.visit(node.expression, expression_scope)
 

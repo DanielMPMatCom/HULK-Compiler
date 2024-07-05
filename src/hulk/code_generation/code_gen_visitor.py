@@ -38,12 +38,14 @@ class CodeGenVisitor:
         new_block += " {\n"
         define_variables = ""
         code = f"   return new{node.identifier}("
-        class_ = self.context.get_type(node.identifier)
+        class_ : Type = self.context.get_type(node.identifier)
         arguments = node.args
         while class_ is not None and class_.name != "Object":
             for param in class_.param_names:
                 variable = f"var{self.variable_id}"
                 self.variable_id += 1
                 define_variables += f"   Object* {variable} = {self.visit(arguments[class_.param_names.index(param)])};\n"
-                # class_.node.scope.children
+                class_.current_node.scope.children[0].get_global_variable_info(param).set_name_for_CodeGen(variable)
+            for attribute in class_.attributes:
+                code += f"({self.visit(attribute.current_node.expression)}), "
         
