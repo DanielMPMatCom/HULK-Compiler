@@ -170,7 +170,7 @@ class Function:
         self.param_names = param_names
         self.param_types = param_types
         self.return_type = return_type
-        self.body = body
+        self.body : ExpressionNode = body
         self.current_node = current_node
 
     def __eq__(self, other):
@@ -315,7 +315,7 @@ class Context:
         self.types = {}
         self.functions = {}
         self.protocols = {}
-        self.data_type_nodes = {}
+        self.id_to_type = {}
 
     def create_type(self, name:str, current_node=None):
         if name in self.types:
@@ -372,8 +372,33 @@ class Context:
             except SemanticError:
                 return self.get_protocol(type_)
     
-    def save_type_info(self, type_name : str, type_dto_node: TypeDTONode):
-        self.data_type_node[type_name] = type_dto_node
+    def save_id_type(self, node : TypeDeclarationNode):
+        self.id_to_type[node.identifier] = node
+
+        if node.parent:
+            try:
+                parent_node : TypeDeclarationNode = self.id_to_type[node.parent]
+            except:
+                print(f"Bug inherit {node.identifier} from {node.parent}, before parent declaration")
+                return
+            
+            # attributes
+            node_attr_id = [attr.identifier for attr in node.attributes]
+            node.attributes += [attr for attr in parent_node.attributes if attr.identifier not in node_attr_id]
+            
+            # methods
+            for p_method in parent_node.methods:
+                for method in node.methods:
+                    if method.identifier == p_method.identifier:
+                        method.scope.define_function(
+                            fname='base',
+                            params=p_method.params_ids,
+                            return_type=p_method.type,
+                            body=p_method.expression
+                        )
+                        break
+            node_methods_ids = [m.identifier for m in node.methods]
+            node.methods += [m for m in parent_node.methods if m.identifier not in node_methods_ids ]
 
 
     def __str__(self):
@@ -417,7 +442,12 @@ class Scope:
             self.local_vars.append(VariableInfo(vname, vtype))
             return True
         return False
-
+    
+    def define_function(self, fname, params, return_type, body = None):
+        if not self.is_func_locally_defined(fname, len(params)):
+            self.local_funcs.append(Function(fname, params, return_type, body))
+        
+        
     def is_var_locally_defined(self, vname):
         return self.get_local_variable_info(vname) is not None
     

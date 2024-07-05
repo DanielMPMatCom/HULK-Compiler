@@ -30,6 +30,9 @@ class TypeChecker():
             self.visit(method)
         if isinstance(node.parent, ErrorType):
             return
+        
+        self.context.save_id_type(node)
+        
         parent_params = self.current_type.parent.param_types
         parent_args = [self.visit(arg) for arg in node.type_parent_args]
         if len(parent_params) != len(parent_args):
