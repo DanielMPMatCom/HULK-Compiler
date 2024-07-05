@@ -17,10 +17,10 @@ class Node:
 
 class ProgramNode(Node):
     def __init__(self, declarations, expression):
-        Node.__init__()
+        Node.__init__(self)
         self.declarations = declarations
         self.expression = expression
-
+    
 class DeclarationNode(Node, ABC):
     pass
 
