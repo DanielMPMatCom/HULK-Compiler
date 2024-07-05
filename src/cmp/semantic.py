@@ -2,6 +2,7 @@ import itertools as itt
 from collections import OrderedDict
 from hulk.hulk_ast import*
 from typing import List
+from hulk.semantic_check.semantic_utils import TypeDTONode
 
 #region Errors
 class SemanticError(Exception):
@@ -293,6 +294,7 @@ class Context:
         self.types = {}
         self.functions = {}
         self.protocols = {}
+        self.data_type_nodes = {}
 
     def create_type(self, name:str):
         if name in self.types:
@@ -348,6 +350,9 @@ class Context:
                 return self.get_type(type_)
             except SemanticError:
                 return self.get_protocol(type_)
+    
+    def save_type_info(self, type_name : str, type_dto_node: TypeDTONode):
+        self.data_type_node[type_name] = type_dto_node
 
 
     def __str__(self):
