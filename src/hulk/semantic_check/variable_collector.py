@@ -33,6 +33,7 @@ class VariableCollector:
             self.current_type.set_parameters()
             node.param_ids = self.current_type.param_names
             node.params_types = self.current_type.param_types
+            node.type_parent_args = []
             for param_name in self.current_type.param_names:
                 node.type_parent_args.append(IDNode(param_name))
         params_scope = scope.create_child_scope()
@@ -78,7 +79,7 @@ class VariableCollector:
             try:
                 variable_type = self.context.type_protocol_or_vector(node.type)
             except SemanticError as error:
-                self.errors.append(error)
+                self.errors.append(SemanticError(error, node.line, node.column))
                 variable_type = ErrorType()
         else:
             variable_type = UndefinedType()
@@ -198,7 +199,7 @@ class VariableCollector:
         operation_scope = scope.create_child_scope()
         operation_scope.define_variable(node.variable_identifier, UndefinedType())
         self.visit(node.operation, operation_scope)
-        self.visitn(node.iterable_expression, scope.create_child_scope())
+        self.visit(node.iterable_expression, scope.create_child_scope())
 
     @visitor.when(NumNode)
     def visit(self, node : NumNode, scope : Scope = None):

@@ -456,7 +456,8 @@ class FormatVisitor:
             "<Minus Node> col: " + str(node.column) + " line: " + str(node.line)
         )
         self.increase_tabs()
-        self.visit(node.expression)
+        self.visit(node.left_expression)
+        self.visit(node.right_expression)
         self.decrease_tabs()
 
     @visitor.when(StarNode)
@@ -493,8 +494,8 @@ class FormatVisitor:
         self.visit(node.right_expression)
         self.decrease_tabs()
 
-    @visitor.when(MinusNode)
-    def visit(self, node: MinusNode):
+    @visitor.when(SignUnaryOpNode)
+    def visit(self, node: SignUnaryOpNode):
         self.add_ans(
             "<Minus Node> col: " + str(node.column) + " line: " + str(node.line)
         )

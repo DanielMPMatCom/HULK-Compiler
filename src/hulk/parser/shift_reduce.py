@@ -30,7 +30,7 @@ class ShiftReduceParser:
                         tag = list(filter(lambda x: str(x) == str(tag), productions))[0]
 
                     self.action[state, G[str(symbol)]] = action, tag
-                print(self.action)
+                # print(self.action)
                 stored_goto = serialized_instance.load_object("goto")
 
                 for key, value in stored_goto.items():
@@ -125,6 +125,7 @@ class ShiftReduceParser:
                 # if state is None or cursor is None:
                 #     return [], []
                 # lookahead = w[cursor]
+                print(stack)
                 return output, operations
 
             action, tag = self.action[state, lookahead]

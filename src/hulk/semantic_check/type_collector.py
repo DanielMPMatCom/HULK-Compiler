@@ -61,7 +61,7 @@ class TypeCollector():
         try:
             self.context.create_type(node.identifier)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
             if node.identifier in self.context.types:
                 self.context.types[node.identifier] = ErrorType()
             else:
@@ -72,7 +72,7 @@ class TypeCollector():
         try:
             self.context.create_protocol(node.identifier)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
             if node.identifier in self.context.protocols:
                 self.context.protocols[node.identifier] = ErrorType()
             else:

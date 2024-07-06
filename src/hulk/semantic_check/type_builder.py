@@ -23,7 +23,7 @@ class TypeBuilder():
         try:
             self.current_type = self.context.get_type(node.identifier)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
             self.current_type = ErrorType()
 
         self.current_type.param_names, self.current_type.param_types = self.param_names_and_types(node)
@@ -41,12 +41,12 @@ class TypeBuilder():
                         break
                     current = current.parent
             except SemanticError as error:
-                self.errors.append(str(error))
+                self.errors.append(SemanticError(error, node.line, node.column))
                 parent = ErrorType()
             try:
                 self.current_type.set_parent(parent)
             except SemanticError as error:
-                self.errors.append(str(error))
+                self.errors.append(SemanticError(error, node.line, node.column))
         else:
             obj_type = self.context.get_type('Object')
             self.current_type.set_parent(obj_type)
@@ -66,13 +66,13 @@ class TypeBuilder():
             try:
                 return_type = self.context.type_protocol_or_vector(node.type)
             except SemanticError as error:
-                self.errors.append(str(error))
+                self.errors.append(SemanticError(error, node.line, node.column))
                 return_type = ErrorType()
 
         try:
             self.context.create_function(node.identifier, self.param_names, self.param_types, return_type)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
 
     @visitor.when(ProtocolDeclarationNode)
     def visit(self, node: ProtocolDeclarationNode):
@@ -92,12 +92,12 @@ class TypeBuilder():
                         break
                     current = current.parent
             except SemanticError as error:
-                self.errors.append(str(error))
+                self.errors.append(SemanticError(error, node.line, node.column))
                 parent = ErrorType()
             try:
                 self.current_type.set_parent(parent)
             except SemanticError as error:
-                self.errors.append(str(error))
+                self.errors.append(SemanticError(error, node.line, node.column))
 
         for method in node.signatures:
             self.visit(method)
@@ -112,12 +112,12 @@ class TypeBuilder():
             try:
                 return_type = self.context.type_protocol_or_vector(node.type)
             except SemanticError as error:
-                self.errors.append(str(error))
+                self.errors.append(SemanticError(error, node.line, node.column))
                 return_type = ErrorType()
         try:
             self.current_type.define_method(node.identifier, param_names, param_types, return_type)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
 
     @visitor.when(AttributeNode)
     def visit(self, node: AttributeNode):
@@ -127,12 +127,12 @@ class TypeBuilder():
             try:
                 attr_type = self.context.type_protocol_or_vector(node.type)
             except SemanticError as error:
-                self.errors.append(str(error))
+                self.errors.append(SemanticError(error, node.line, node.column))
                 attr_type = ErrorType()
         try:
             self.current_type.define_attribute(node.identifier, attr_type)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
 
     @visitor.when(ProtocolMethodSignatureNode)
     def visit(self, node : ProtocolMethodSignatureNode):
@@ -140,16 +140,16 @@ class TypeBuilder():
         try:
             return_type = self.context.type_protocol_or_vector(node.type)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
             return_type = ErrorType()
         try:
             self.current_type.define_method(node.identifier, param_names, param_types, return_type)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
 
 
 
-    def param_names_and_types(self, node):
+    def param_names_and_types(self, node : Node):
         if node.param_ids is None or node.param_types is None:
             return None, None
 
@@ -167,7 +167,7 @@ class TypeBuilder():
                     try:
                         param_type = self.context.type_protocol_or_vector(param_type)
                     except SemanticError as error:
-                        self.errors.append(str(error))
+                        self.errors.append(SemanticError(error, node.line, node.column))
                         param_type = ErrorType()
                 names.append(param_name)
                 types.append(self.context.get_type(param_type.name))

@@ -7,8 +7,8 @@ G =  Grammar()
 #---------------------------------------------------Non-Terminals---------------------------------------------------------
 Program = G.NonTerminal('Program', startSymbol=True)
 Declaration_list, Declaration = G.NonTerminals('Declaration_list Declaration')
-Expression, Line_Expression, Program_Expression, Simple_Expression, Non_Empty_Expression_list, Comma_Sep_Expr_List, Expression_Block, = G.NonTerminals(
-    'Expression Line_Expression Program_Expression Simple_Expression Non_Empty_Expression_list Comma_Sep_Expr_List Expression_Block'
+Expression, Line_Expression, Program_Expression, Simple_Expression, Non_Empty_Expression_list, Comma_Sep_Expr_List, Non_Empty_Comma_Sep_Expr_List, Expression_Block = G.NonTerminals(
+    'Expression Line_Expression Program_Expression Simple_Expression Non_Empty_Expression_list Comma_Sep_Expr_List Non_Empty_Comma_Sep_Expr_List Expression_Block'
     )
 Atom = G.NonTerminal('Atom')
 Arithmetic_Expression_p_m, Arithmetic_Expression_s_d_mod = G.NonTerminals(
@@ -72,8 +72,8 @@ Line_Expression %= Expression + semi, lambda h,s: s[1], None, None
 Line_Expression %= Expression_Block, lambda h,s: s[1], None
 
 # An expression is a single exrpession or an expression block
-Expression %= Simple_Expression, lambda h,s: s[1], None
 Expression %= Expression_Block, lambda h,s: s[1], None
+Expression %= Simple_Expression, lambda h,s: s[1], None
 
 # An expression block is a list of expressions enclosed in curly braces. It can't be empty
 Expression_Block %= ocurly + Non_Empty_Expression_list + ccurly, lambda h,s: ExpressionBlockNode(s[2]), None, None, None
@@ -81,11 +81,14 @@ Expression_Block %= ocurly + Non_Empty_Expression_list + ccurly, lambda h,s: Exp
 # A non empty expression list is a line expression or a line expression followed by a non empty expression list
 Non_Empty_Expression_list %= Line_Expression, lambda h,s: [s[1]], None
 Non_Empty_Expression_list %= Line_Expression + Non_Empty_Expression_list, lambda h,s: [s[1]] + s[2], None, None
+Non_Empty_Expression_list %= Simple_Expression, lambda h,s: [s[1]], None
 
 # A list of expressions separated by commas
 Comma_Sep_Expr_List %= G.Epsilon, lambda h,s: []
-Comma_Sep_Expr_List %= Expression, lambda h,s: [s[1]], None
-Comma_Sep_Expr_List %= Expression + comma + Comma_Sep_Expr_List, lambda h,s: [s[1]] + s[3], None, None, None
+Comma_Sep_Expr_List %= Non_Empty_Comma_Sep_Expr_List, lambda h,s: s[1]
+
+Non_Empty_Comma_Sep_Expr_List %= Expression, lambda h,s: [s[1]], None
+Non_Empty_Comma_Sep_Expr_List %= Expression + comma + Non_Empty_Comma_Sep_Expr_List, lambda h,s: [s[1]] + s[3], None, None, None
 
 # A simple expression is a let in expression, an if expression, a while expression, a for expression or a destructive operation
 Simple_Expression %= let_ + Assignment_list + in_ + Expression, lambda h,s: LetInNode(s[2], s[4]), None, None, None, None
@@ -161,7 +164,7 @@ New_Type_Operation %= Not_Operation, lambda h,s: s[1], None
 Not_Operation %= not_ + Obj_Indx_Method_Attr_Call, lambda h,s: NotNode(s[2]), None, None
 Not_Operation %= Obj_Indx_Method_Attr_Call, lambda h,s: s[1], None
 
-Obj_Indx_Method_Attr_Call %= Obj_Indx_Method_Attr_Call + dot + id_ + opar + Obj_Indx_Method_Attr_Call + cpar, lambda h,s: MethodCallNode(s[1], s[3], s[5]), None, None, None, None, None, None
+Obj_Indx_Method_Attr_Call %= Obj_Indx_Method_Attr_Call + dot + id_ + opar + Comma_Sep_Expr_List + cpar, lambda h,s: MethodCallNode(s[1], s[3], s[5]), None, None, None, None, None, None
 Obj_Indx_Method_Attr_Call %= Obj_Indx_Method_Attr_Call + dot + id_, lambda h,s: AttributeCallNode(s[1], s[3]), None, None, None
 Obj_Indx_Method_Attr_Call %= Obj_Indx_Method_Attr_Call + obrack + Expression + cbrack, lambda h,s: IndexNode(s[1], s[3]), None, None, None, None
 Obj_Indx_Method_Attr_Call %= Atom, lambda h,s: s[1], None

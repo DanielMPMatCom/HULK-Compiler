@@ -30,17 +30,14 @@ class TypeChecker():
             self.visit(method)
         if isinstance(node.parent, ErrorType):
             return
-        
-        # self.context.save_id_type(node)
-        
         parent_params = self.current_type.parent.param_types
         parent_args = [self.visit(arg) for arg in node.type_parent_args]
         if len(parent_params) != len(parent_args):
-            self.errors.append(SemanticError(f'Error: {self.current_type.parent.name} expects {len(parent_params)} arguments but {len(parent_args)} were given', node.line, node.column))
+            self.errors.append(SemanticError(f'{self.current_type.parent.name} expects {len(parent_params)} arguments but {len(parent_args)} were given', node.line, node.column))
             return ErrorType()
         for i in range(len(parent_params)):
             if not parent_args[i].conforms_to(parent_params[i]):
-                self.errors.append(SemanticError(f'Error: {parent_args[i].name} does not conform to {parent_params[i].name}', node.line, node.column))
+                self.errors.append(SemanticError(f'{parent_args[i].name} does not conform to {parent_params[i].name}', node.line, node.column))
         self.current_type = None
 
     @visitor.when(FunctionDeclarationNode)
@@ -48,7 +45,7 @@ class TypeChecker():
         func : Function = self.context.get_function_by_name(node.identifier)
         inferred_return_type : Type = self.visit(node.expression)
         if not inferred_return_type.conforms_to(func.return_type):
-            self.errors.append(SemanticError(f'Error: {inferred_return_type.name} does not conform to {func.return_type}', node.line, node.column))
+            self.errors.append(SemanticError(f'{inferred_return_type.name} does not conform to {func.return_type}', node.line, node.column))
             return ErrorType()
         return func.return_type
     
@@ -64,21 +61,21 @@ class TypeChecker():
         self.current_method = self.current_type.get_method(node.identifier)
         inferred_return_type : Type = self.visit(node.expression)
         if not inferred_return_type.conforms_to(self.current_method.return_type):
-            self.errors.append(SemanticError(f'Error: {inferred_return_type.name} does not conform to {self.current_method.return_type}', node.line, node.column))
+            self.errors.append(SemanticError(f'{inferred_return_type.name} does not conform to {self.current_method.return_type}', node.line, node.column))
         return_type = self.current_method.return_type
         if self.current_type.parent is None or isinstance(self.current_type.parent, ErrorType):
             return return_type
         try:
-            ancestor_method : MethodNode = self.current_type.parent.get_method(node.identifier)
+            ancestor_method : Method = self.current_type.parent.get_method(node.identifier)
         except SemanticError:
             return return_type
         if ancestor_method.return_type != return_type:
             self.errors.append(SemanticError(f'Method {self.current_method.name} already defined in ancestor with different signature (return type)', node.line, node.column))
-        elif len(ancestor_method.params_types) != len(self.current_method.params_types):
+        elif len(ancestor_method.param_types) != len(self.current_method.param_types):
             self.errors.append(SemanticError(f'Method {self.current_method.name} already defined in ancestor with different signature (number of arguments)', node.line, node.column))
         else:
-            for ancestor_param_type in ancestor_method.params_types:
-                param_type = self.current_method.param_types[ancestor_method.params_types.index(param_type)]
+            for ancestor_param_type in ancestor_method.param_types:
+                param_type = self.current_method.param_types[ancestor_method.param_types.index(param_type)]
                 if ancestor_param_type != param_type:
                     self.errors.append(SemanticError(f'Method {self.current_method.name} already defined in ancestor with different signature (argument type)', node.line, node.column))
         self.current_method = None
@@ -89,7 +86,7 @@ class TypeChecker():
         inferred_type : Type = self.visit(node.expression)
         attr_type = self.current_type.get_attribute(node.identifier).type
         if not inferred_type.conforms_to(attr_type):
-            self.errors.append(SemanticError(f'Error: {inferred_type.name} does not conform to {attr_type}', node.line, node.column))
+            self.errors.append(SemanticError(f'{inferred_type.name} does not conform to {attr_type}', node.line, node.column))
         return attr_type
     
     @visitor.when(ProtocolMethodSignatureNode)
@@ -117,7 +114,7 @@ class TypeChecker():
         try:
             elements_type = self.context.get_type(node.elements_type)
         except SemanticError:
-            self.errors.append(SemanticError(f'Error: {node.elements_type} is not a valid type', node.line, node.column))
+            self.errors.append(SemanticError(f'{node.elements_type} is not a valid type', node.line, node.column))
             elements_type = ErrorType()
         return elements_type
 
@@ -127,7 +124,7 @@ class TypeChecker():
         inferred_type : Type = self.visit(node.expression)
         variable_type = scope.get_global_variable_info(node.identifier).type
         if not inferred_type.conforms_to(variable_type):
-            self.errors.append(SemanticError(f'Error: {inferred_type.name} does not conform to {variable_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'{inferred_type.name} does not conform to {variable_type.name}', node.line, node.column))
             variable_type = ErrorType()
         return variable_type
     
@@ -149,7 +146,7 @@ class TypeChecker():
         condition_types = [self.visit(condition) for condition in node.conditions]
         for condition_type in condition_types:
             if condition_type != BoolType():
-                self.errors.append(SemanticError(f'Error: {condition_type.name} does not conform to Boolean', node.line, node.column))
+                self.errors.append(SemanticError(f'{condition_type.name} does not conform to Boolean', node.line, node.column))
         expression_types = [self.visit(expression) for expression in node.expressions]
         else_type = self.visit(node.else_expression)
         return lowest_common_ancestor(expression_types + [else_type])
@@ -158,7 +155,7 @@ class TypeChecker():
     def visit(self, node : WhileNode):
         condition_type = self.visit(node.condition)
         if condition_type != BoolType():
-            self.errors.append(SemanticError(f'Error: {condition_type.name} does not conform to Boolean', node.line, node.column))
+            self.errors.append(SemanticError(f'{condition_type.name} does not conform to Boolean', node.line, node.column))
         return self.visit(node.expression)
     
     @visitor.when(ForNode)
@@ -166,7 +163,7 @@ class TypeChecker():
         iterable_type : Type = self.visit(node.iterable_expression)
         protocol_iterable = self.context.get_protocol('Iterable')
         if not iterable_type.conforms_to(protocol_iterable):
-            self.errors.append(SemanticError(f'Error: {iterable_type.name} does not conform to {protocol_iterable.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'{iterable_type.name} does not conform to {protocol_iterable.name}', node.line, node.column))
         return self.visit(node.expression)
     
     @visitor.when(DestructiveOperationNode)
@@ -177,7 +174,7 @@ class TypeChecker():
             self.errors.append(SemanticError(f'You cannot reassign a Self variable', node.line, node.column))
             return ErrorType()
         if not new_type.conforms_to(current_type):
-            self.errors.append(SemanticError(f'Error: {new_type.name} does not conform to {current_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'{new_type.name} does not conform to {current_type.name}', node.line, node.column))
             return ErrorType()
         return current_type
         
@@ -186,15 +183,15 @@ class TypeChecker():
         try:
             new_type = self.context.get_type(node.identifier, len(node.args))
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
             return ErrorType()
         argument_types = [self.visit(argument) for argument in node.args]
         if len(argument_types) != len(new_type.param_types):
-            self.errors.append(SemanticError(f'Error: {new_type.name} expects {len(new_type.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
+            self.errors.append(SemanticError(f'{new_type.name} expects {len(new_type.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
             return ErrorType()
         for argument_type, param_type in zip(argument_types, new_type.param_types):
             if not argument_type.conforms_to(param_type):
-                self.errors.append(SemanticError(f'Error: {argument_type.name} does not conform to {param_type.name}', node.line, node.column))
+                self.errors.append(SemanticError(f'{argument_type.name} does not conform to {param_type.name}', node.line, node.column))
                 return ErrorType()
         return new_type
     
@@ -203,21 +200,21 @@ class TypeChecker():
         self.visit(node.expression)
         boolean_type = self.context.get_type('Boolean')
         try:
-            self.context.type_protocol_or_vector(node.type)
-        except SemanticError as error:
-            self.errors.append(str(error))
+            self.context.type_protocol_or_vector(node.type.lexeme)
+        except SemanticError:
+            self.errors.append(SemanticError(f"{node.type.lexeme} is not defined", node.line, node.column))
         return boolean_type
     
     @visitor.when(AsNode)
     def visit(self, node : AsNode):
         expr_type : Type = self.visit(node.expression)
         try:
-            as_type = self.context.type_protocol_or_vector(node.type)
-        except SemanticError as error:
-            self.errors.append(str(error))
+            as_type = self.context.type_protocol_or_vector(node.type.lexeme)
+        except SemanticError:
+            self.errors.append(SemanticError(f"{node.type.lexeme} is not defined", node.line, node.column))
             return ErrorType()
         if not expr_type.conforms_to(as_type) and not as_type.conforms_to(expr_type):
-            self.errors.append(SemanticError(f'Error: {expr_type.name} does not conform to {as_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'{expr_type.name} does not conform to {as_type.name}', node.line, node.column))
             return ErrorType()
         return as_type
     
@@ -227,16 +224,16 @@ class TypeChecker():
         try:
             function : Function = self.context.get_function_by_name(node.identifier)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
             for arg in node.args:
                 self.visit(arg)
             return ErrorType()
         if len(argument_types) != len(function.param_types):
-            self.errors.append(SemanticError(f'Error: {function.name} expects {len(function.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
+            self.errors.append(SemanticError(f'{function.name} expects {len(function.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
             return ErrorType()
         for argument_type, param_type in zip(argument_types, function.param_types):
             if not argument_type.conforms_to(param_type):
-                self.errors.append(SemanticError(f'Error: {argument_type.name} does not conform to {param_type.name}', node.line, node.column))
+                self.errors.append(SemanticError(f'{argument_type.name} does not conform to {param_type.name}', node.line, node.column))
                 return ErrorType()
         return function.return_type
     
@@ -252,16 +249,16 @@ class TypeChecker():
             else:
                 method = object_type.get_method(node.method_identifier)
         except SemanticError as error:
-            self.errors.append(str(error))
+            self.errors.append(SemanticError(error, node.line, node.column))
             for arg in node.args:
                 self.visit(arg)
             return ErrorType()
         if len(argument_types) != len(method.param_types):
-            self.errors.append(SemanticError(f'Error: {method.name} expects {len(method.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
+            self.errors.append(SemanticError(f'{method.name} expects {len(method.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
             return ErrorType()
         for argument_type, param_type in zip(argument_types, method.param_types):
             if not argument_type.conforms_to(param_type):
-                self.errors.append(SemanticError(f'Error: {argument_type.name} does not conform to {param_type.name}', node.line, node.column))
+                self.errors.append(SemanticError(f'{argument_type.name} does not conform to {param_type.name}', node.line, node.column))
                 return ErrorType()
         return method.return_type
     
@@ -275,16 +272,16 @@ class TypeChecker():
                 attribute = self.current_type.get_attribute(node.attribute_identifier)
                 return attribute.type
             except SemanticError as error:
-                self.errors.append(str(error))
+                self.errors.append(SemanticError(error, node.line, node.column))
                 return ErrorType()
         else:
-            self.errors.append(SemanticError('Error: You cannot access an attribute from a non-self object', node.line, node.column))
+            self.errors.append(SemanticError('You cannot access an attribute from a non-self object', node.line, node.column))
             return ErrorType()
         
     @visitor.when(BaseCallNode)
     def visit(self, node : BaseCallNode):
         if self.current_method is None:
-            self.errors.append(SemanticError('Error: You cannot use base outside a method', node.line, node.column))
+            self.errors.append(SemanticError('You cannot use base outside a method', node.line, node.column))
             for argument in node.args:
                 self.visit(argument)
             return ErrorType()
@@ -293,17 +290,17 @@ class TypeChecker():
             node.method_name = self.current_method.name
             node.parent_type = self.current_type.parent
         except SemanticError:
-            self.errors.append(SemanticError('Error: You cannot use base in a method that is not overriding', node.line, node.column))
+            self.errors.append(SemanticError('You cannot use base in a method that is not overriding', node.line, node.column))
             for argument in node.args:
                 self.visit(argument)
             return ErrorType()
         argument_types = [self.visit(argument) for argument in node.args]
         if len(argument_types) != len(method.param_types):
-            self.errors.append(SemanticError(f'Error: {method.name} expects {len(method.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
+            self.errors.append(SemanticError(f'{method.name} expects {len(method.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
             return ErrorType()
         for argument_type, param_type in zip(argument_types, method.param_types):
             if not argument_type.conforms_to(param_type):
-                self.errors.append(SemanticError(f'Error: {argument_type.name} does not conform to {param_type.name}', node.line, node.column))
+                self.errors.append(SemanticError(f'{argument_type.name} does not conform to {param_type.name}', node.line, node.column))
                 return ErrorType()
         return method.return_type
     
@@ -312,13 +309,13 @@ class TypeChecker():
         num_type = self.context.get_type('Number')
         index_type : Type = self.visit(node.index)
         if not index_type.conforms_to(num_type):
-            self.errors.append(SemanticError(f'Error: {index_type.name} does not conform to {num_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'{index_type.name} does not conform to {num_type.name}', node.line, node.column))
             return ErrorType()
         object_type : Type = self.visit(node.object)
         if isinstance(object_type, ErrorType):
             return ErrorType()
         if not isinstance(object_type, VectorType):
-            self.errors.append(SemanticError(f'Error: Invalid operation []. {object_type.name} is not a Vector', node.line, node.column))
+            self.errors.append(SemanticError(f'Invalid operation []. {object_type.name} is not a Vector', node.line, node.column))
             return ErrorType()
         return object_type.element_types()
     
@@ -336,8 +333,11 @@ class TypeChecker():
         protocol_iterable = self.context.get_protocol('Iterable')
         return_type = self.visit(node.operation)
         if not vector_iterable_type.conforms_to(protocol_iterable):
-            self.errors.append(SemanticError(f'Error: {vector_iterable_type.name} does not conform to {protocol_iterable.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'{vector_iterable_type.name} does not conform to {protocol_iterable.name}', node.line, node.column))
             return ErrorType()
+        if isinstance(return_type, ErrorType):
+            return ErrorType()
+        return VectorType(return_type)
         
     @visitor.when(NumNode)
     def visit(self, node : NumNode):
@@ -355,7 +355,7 @@ class TypeChecker():
     def visit(self, node : IDNode):
         scope = node.scope
         if not scope.is_var_globally_defined(node.lexeme):
-            self.errors.append(SemanticError(f'Error: Variable {node.lexeme} is not defined', node.line, node.column))
+            self.errors.append(SemanticError(f'Variable {node.lexeme} is not defined', node.line, node.column))
             return ErrorType()
         variable = scope.get_global_variable_info(node.lexeme)
         return variable.type
@@ -366,7 +366,7 @@ class TypeChecker():
         left_type : Type = self.visit(node.left_expression)
         right_type : Type = self.visit(node.right_expression)
         if not left_type.conforms_to(boolean_type) or not right_type.conforms_to(boolean_type):
-            self.errors.append(SemanticError(f'Error: Cannot perform boolean operation with {left_type.name} and {right_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'Cannot perform boolean operation with {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
         return boolean_type
     
@@ -375,7 +375,7 @@ class TypeChecker():
         left_type : Type = self.visit(node.left_expression)
         right_type : Type = self.visit(node.right_expression)
         if not left_type.conforms_to(right_type) and not right_type.conforms_to(left_type):
-            self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
         return self.context.get_type('Boolean')
     
@@ -388,7 +388,7 @@ class TypeChecker():
         if right_type.name == "<undefined>":
             right_type = NumberType()
         if left_type != NumberType() or right_type != NumberType():
-            self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
         return self.context.get_type('Boolean')
 
@@ -398,7 +398,7 @@ class TypeChecker():
         left_type : Type = self.visit(node.left_expression)
         right_type : Type = self.visit(node.right_expression)
         if not left_type.conforms_to(string_type) or not right_type.conforms_to(string_type):
-            self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
         return string_type
     
@@ -412,7 +412,7 @@ class TypeChecker():
         if right_type.name == "<undefined>":
             right_type = NumberType()
         if left_type != num_type or right_type != num_type:
-            self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
         return num_type
     
@@ -422,7 +422,7 @@ class TypeChecker():
         if expression_type.name == "<undefined>":
             expression_type = NumberType()
         if expression_type != NumberType():
-            self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} with {expression_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'Invalid operation {node.operator} with {expression_type.name}', node.line, node.column))
             return ErrorType()
         return self.context.get_type('Number')
     
@@ -433,6 +433,6 @@ class TypeChecker():
         if expression_type.name == "<undefined>":
             expression_type = BoolType()
         if expression_type != boolean_type:
-            self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} with {expression_type.name}', node.line, node.column))
+            self.errors.append(SemanticError(f'Invalid operation {node.operator} with {expression_type.name}', node.line, node.column))
             return ErrorType()
         return boolean_type

@@ -3,6 +3,10 @@ from src.hulk.semantic_check.type_builder import TypeBuilder
 from src.hulk.semantic_check.type_checker import TypeChecker
 from src.hulk.semantic_check.variable_collector import VariableCollector
 
+def formatErrors(vector) :
+    for error in vector:
+        print("\t ❌ Error: " + str(error)) 
+
 def semantic_check_pipeline(ast, verbose=False):
     if verbose:
         print("============== COLLECTING TYPES ===============")
@@ -20,8 +24,7 @@ def semantic_check_pipeline(ast, verbose=False):
     type_builder.visit(ast)
     if verbose:
         print('Errors: [')
-        for error in errors:
-            print('\t', error)
+        formatErrors(errors)
         print(']')
         print('Context:')
         print(context)
@@ -30,8 +33,7 @@ def semantic_check_pipeline(ast, verbose=False):
     scope = variable_collector.visit(ast)
     if verbose:
         print('Errors: [')
-        for error in errors:
-            print('\t', error)
+        formatErrors(errors)
         print(']')
         print('Context:')
         print(context)
@@ -39,11 +41,10 @@ def semantic_check_pipeline(ast, verbose=False):
         print(scope)
         print("============== CHECKING TYPES =================")
     type_checker = TypeChecker(context, errors)
-    scope = type_checker.visit(ast)
+    type_checker.visit(ast)
     if verbose:
         print('Errors: [')
-        for error in errors:
-            print('\t', error)
+        formatErrors(errors)
         print(']')
         print('Context:')
         print(context)

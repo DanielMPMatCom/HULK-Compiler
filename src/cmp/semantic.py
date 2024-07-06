@@ -7,7 +7,14 @@ from typing import List
 class SemanticError(Exception):
     @property
     def text(self):
-        return self.args[0]
+        message = ''
+        for arg in self.args:
+            message += str(arg) + ' '
+        return message
+
+    def __str__(self) -> str:
+        return self.text
+        
     
 #endregion
     
@@ -274,7 +281,7 @@ class BoolType(Type):
     
 class VectorType(Type):
     def __init__(self, element_type):
-        Type.__init__(f'{element_type.name}[]')
+        Type.__init__(self, f'{element_type.name}[]')
         self.set_parent(ObjectType())
         self.define_method('size', [], [], NumberType())
         self.define_method('next', [], [], BoolType())
@@ -284,8 +291,9 @@ class VectorType(Type):
         return self.get_method('current').return_type
 
     def conforms_to(self, other):
-        return ((not isinstance(other, VectorType)) and Type.conforms_to(other)) or \
-    (isinstance(other, VectorType) and self.element_types().conforms_to(other.element_types()))
+        if not isinstance(other, VectorType):
+            return super().conforms_to(other)
+        return self.element_types().conforms_to(other.element_types())
 
     def __eq__(self, other):
         return isinstance(other, VectorType) and self.name == other.name
@@ -324,7 +332,6 @@ class Context:
         self.types = {}
         self.functions = {}
         self.protocols = {}
-        # self.id_to_type = {}
 
     def create_type(self, name:str, current_node=None):
         if name in self.types:
@@ -372,6 +379,10 @@ class Context:
             raise SemanticError(f'Protocol "{name}" is not defined.')
         
     def type_protocol_or_vector(self, type_):
+        try:
+            self.types[type_]
+        except:
+            raise SemanticError(f"{type_} is not defined")
         if isinstance(self.types[type_], VectorType):
             vector_element_type = self.type_protocol_or_vector(type_.element_type)
             return VectorType(vector_element_type)
@@ -381,35 +392,6 @@ class Context:
             except SemanticError:
                 return self.get_protocol(type_)
     
-    # def save_id_type(self, node : TypeDeclarationNode):
-    #     self.id_to_type[node.identifier] = node
-
-    #     if node.parent:
-    #         try:
-    #             parent_node : TypeDeclarationNode = self.id_to_type[node.parent]
-    #         except:
-    #             print(f"Bug inherit {node.identifier} from {node.parent}, before parent declaration")
-    #             return
-            
-    #         # attributes
-    #         node_attr_id = [attr.identifier for attr in node.attributes]
-    #         node.attributes += [attr for attr in parent_node.attributes if attr.identifier not in node_attr_id]
-            
-    #         # methods
-    #         for p_method in parent_node.methods:
-    #             for method in node.methods:
-    #                 if method.identifier == p_method.identifier:
-    #                     method.scope.define_function(
-    #                         fname='base',
-    #                         params=p_method.params_ids,
-    #                         return_type=p_method.type,
-    #                         body=p_method.expression
-    #                     )
-    #                     break
-    #         node_methods_ids = [m.identifier for m in node.methods]
-    #         node.methods += [m for m in parent_node.methods if m.identifier not in node_methods_ids ]
-
-
     def __str__(self):
         return '{\n\t' + '\n\t'.join(y for x in self.types.values() for y in str(x).split('\n')) + '\n}'
 
@@ -500,6 +482,32 @@ class Scope:
         if self.paret is not None:
             variables.extend(self.parent.get_all_variables())
         return variables
+    
+    def __str__(self):
+        return self.tab_level( 0, 0 , 0)
+
+    def tab_level(self, depth, id , tb) -> str:
+        current_level = ''
+        grow = 0
+        if(len(self.local_vars) > 0):
+            grow = 1
+            current_level += f'Vars ID:{id}:\n'
+            for v in self.local_vars:
+                current_level += '  ' * tb + f' {v.name} : {v.type.name}\n'
+        if(len(self.local_funcs ) > 0):
+            grow =  1
+            current_level += f'Funcs ID:{id}:\n'
+            for f in self.local_funcs:
+                current_level += '  ' * tb+  f'{f.name} : {f.return_type.name}\n'
+        
+        for i, child in enumerate(self.children):
+            current_level +=  '  ' * tb + child.tab_level(depth + grow,  id + 1, tb + grow)
+    
+        return current_level
+        
+    def __repr__(self):
+        return str(self)
+
 
 #endregion
 
