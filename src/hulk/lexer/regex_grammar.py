@@ -6,7 +6,7 @@ def build_regex_grammar():
 
     Automaton = G.NonTerminal('E', True)
     Union, Concat, Closure, Atom = G.NonTerminals('Union Concat Closure Atom')
-    pipe, star, opar, cpar, symbol, epsilon = G.Terminals('| * ( ) symbol ε')
+    backslash, pipe, star, opar, cpar, symbol, epsilon = G.Terminals('\\ | * ( ) symbol ε')
 
     # -------------------- PRODUCTIONS -------------------- #
 
@@ -24,6 +24,11 @@ def build_regex_grammar():
     Atom %= opar + Automaton + cpar, lambda h,s: s[2]
     Atom %= symbol, lambda h,s: SymbolNode(s[1])
     Atom %= epsilon, lambda h,s: EpsilonNode(s[1])
+    Atom %= backslash + symbol, lambda h, s: SymbolNode(s[2])
+    Atom %= backslash + pipe, lambda h, s: SymbolNode(s[2])
+    Atom %= backslash + star, lambda h, s: SymbolNode(s[2])
+    Atom %= backslash + backslash, lambda h, s: SymbolNode(s[2])
+
 
     return G
 

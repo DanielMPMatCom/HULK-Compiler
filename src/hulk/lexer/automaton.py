@@ -58,8 +58,6 @@ class NFA:
 class DFA(NFA):
 
     def __init__(self, states, finals, transitions, start=0):
-        assert all(isinstance(value, int) for value in transitions.values())
-        assert all(len(symbol) > 0 for origin, symbol in transitions)
 
         transitions = {key: [value] for key, value in transitions.items()}
         NFA.__init__(self, states, finals, transitions, start)
