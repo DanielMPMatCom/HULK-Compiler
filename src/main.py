@@ -15,13 +15,18 @@ lexer = Lexer(table=table, eof=G.EOF)
 
 code_example ="""
 function fib(n) => if (n == 0 | n == 1) 1 else fib(n-1) + fib(n-2);
-function fact(x) => let f = 1 in for (i in range(1, x+1)) f := f * i;
-function gcd(a, b) => while (a > 0)
-        let m = a \% b in {
-            b := a;
-            a := m;
-        };
-        print(3);
+protocol Hashable {
+    hash(): Number;
+}
+protocol Equatable extends Hashable {
+    equals(other: Object): Boolean;
+}
+protocol Iterable {
+    next() : Boolean;
+    current() : Object;
+}
+        {print(3);
+        fib(3);}
 """
 print(code_example)
 tokens = lexer(code_example)

@@ -137,6 +137,8 @@ class Type:
         return param_names, param_types
 
     def conforms_to(self, other):
+        if isinstance(other, UndefinedType) or isinstance(self, UndefinedType) or self.name == "<undefined>" or other.name == "<undefined>":
+            return True
         if isinstance(other, Type):
             return other.bypass() or self == other or self.parent is not None and self.parent.conforms_to(other)
         elif isinstance(other, Protocol):
@@ -216,6 +218,11 @@ class Protocol:
             return all(method.can_be_replaced_by(self.get_method(method.name)) for method in other.methods)
         except SemanticError:
             return False
+        
+    def set_parent(self, parent):
+        if self.parent is not None:
+            raise SemanticError(f'Parent type is already set for {self.name}.')
+        self.parent = parent
     
 #endregion
     

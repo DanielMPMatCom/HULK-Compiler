@@ -383,6 +383,10 @@ class TypeChecker():
     def visit(self, node : ArithmeticBinaryOpNode):
         left_type : Type = self.visit(node.left_expression)
         right_type : Type = self.visit(node.right_expression)
+        if left_type.name == "<undefined>": 
+            left_type = NumberType()
+        if right_type.name == "<undefined>":
+            right_type = NumberType()
         if left_type != NumberType() or right_type != NumberType():
             self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
@@ -403,6 +407,10 @@ class TypeChecker():
         num_type = self.context.get_type('Number')
         left_type : Type = self.visit(node.left_expression)
         right_type : Type = self.visit(node.right_expression)
+        if left_type.name == "<undefined>": 
+            left_type = NumberType()
+        if right_type.name == "<undefined>":
+            right_type = NumberType()
         if left_type != num_type or right_type != num_type:
             self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
@@ -411,6 +419,8 @@ class TypeChecker():
     @visitor.when(SignUnaryOpNode)
     def visit(self, node : SignUnaryOpNode):
         expression_type : Type = self.visit(node.expression)
+        if expression_type.name == "<undefined>":
+            expression_type = NumberType()
         if expression_type != NumberType():
             self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} with {expression_type.name}', node.line, node.column))
             return ErrorType()
@@ -420,6 +430,8 @@ class TypeChecker():
     def visit(self, node : NotUnaryOpNode):
         boolean_type = self.context.get_type('Boolean')
         expression_type : Type = self.visit(node.expression)
+        if expression_type.name == "<undefined>":
+            expression_type = BoolType()
         if expression_type != boolean_type:
             self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} with {expression_type.name}', node.line, node.column))
             return ErrorType()

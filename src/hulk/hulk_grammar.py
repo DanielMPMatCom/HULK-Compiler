@@ -220,7 +220,7 @@ Protocol_Declaration %= protocol_ + id_ + ocurly + Protocol_Methods_Signatures +
 Protocol_Declaration %= protocol_ + id_ + extends_ + id_ + ocurly + Protocol_Methods_Signatures + ccurly, lambda h,s: ProtocolDeclarationNode(s[2], s[6], s[4]), None, None, None, None, None, None, None
 
 Protocol_Methods_Signatures %= Protocol_Methods_Signatures + id_ + opar + Params_Typed + cpar + colon + Non_Empty_Type + semi, lambda h,s: s[1] + [ProtocolMethodSignatureNode(s[2], s[4], s[7])], None, None, None, None, None, None, None, None
-Protocol_Methods_Signatures %= id_ + opar + Params_Typed + cpar + colon + Non_Empty_Type + semi, lambda h,s: ProtocolMethodSignatureNode(s[1], s[3], s[6]), None, None, None, None, None, None, None
+Protocol_Methods_Signatures %= id_ + opar + Params_Typed + cpar + colon + Non_Empty_Type + semi, lambda h,s: [ProtocolMethodSignatureNode(s[1], s[3], s[6])], None, None, None, None, None, None, None
 
 Params_Typed %= G.Epsilon, lambda h,s: []
 Params_Typed %= Params_Typed + comma + id_ + colon + Non_Empty_Type, lambda h,s: s[1] + [(s[3], s[5])], None, None, None, None, None
