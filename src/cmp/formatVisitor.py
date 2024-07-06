@@ -336,7 +336,7 @@ class FormatVisitor:
     def visit(self, node: IDNode):
         self.add_ans(
             "<ID Node> id"
-            + node.identifier
+            + node.lexeme
             + " col: "
             + str(node.column)
             + " line: "

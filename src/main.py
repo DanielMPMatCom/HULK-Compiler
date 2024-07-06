@@ -5,7 +5,7 @@ from hulk.hulk_lexer import Lexer
 from hulk.lexer.regex_table import table
 from hulk.lexer.token_type import TokenType
 from hulk.lexer.regex import Regex
-from cmp.evaluation import evaluate_reverse_parse, evaluate_reverse_parse_plus
+from cmp.evaluation import evaluate_reverse_parse_plus
 from cmp.formatVisitor import FormatVisitor
 from hulk.semantic_check.semantic_check_pipeline import semantic_check_pipeline
 
@@ -13,25 +13,10 @@ parser = LR1Parser(G=G, load=True)
 
 lexer = Lexer(table=table, eof=G.EOF)
 
-code_example ="""type Range(min:Number, max:Number) {
-    min = min;
-    max = max;
-    current = min - 1;
+code_example ="""
 
-    next(): Boolean => (self.current := self.current + 1) < self.max;
-    current(): Number => self.current;
-}
-type Point(x,y) {
-    x = x;
-    y = y;
-
-    getX() => self.x;
-    getY() => self.y;
-
-    setX(x) => self.x := x;
-    setY(y) => self.y := y;
-}
-print(5)"""
+print(z == 322.6 | z == 1);
+"""
 print(code_example)
 tokens = lexer(code_example)
 

@@ -72,7 +72,7 @@ regexs = [
         G["id"],
     ),
     (
-        f"{positive}{non_negative}*|({positive}{non_negative}.{non_negative}*)|({non_negative}.{non_negative}*)",
+        f"0|{positive}{non_negative}*|({positive}{non_negative}*.{non_negative}*)|({non_negative}.{non_negative}*)",
         G["num"],
     ),
     (
