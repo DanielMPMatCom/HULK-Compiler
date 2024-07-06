@@ -142,7 +142,7 @@ class TypeChecker():
     def visit(self, node : LetInNode):
         for assignment in node.assignment_list:
             self.visit(assignment)
-        self.visit(node.expression)
+        return self.visit(node.expression)
 
     @visitor.when(IfElseNode)
     def visit(self, node : IfElseNode):
