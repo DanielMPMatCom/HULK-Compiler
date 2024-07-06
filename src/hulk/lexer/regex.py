@@ -29,4 +29,4 @@ class Regex:
         self.ast = ast
         # -------------------------------------- #
 
-        return dfa
+        return nfa
