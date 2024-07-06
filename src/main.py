@@ -9,7 +9,7 @@ from cmp.evaluation import evaluate_reverse_parse_plus
 from cmp.formatVisitor import FormatVisitor
 from hulk.semantic_check.semantic_check_pipeline import semantic_check_pipeline
 
-parser = LR1Parser(G=G, load=True)
+parser = LR1Parser(G=G, load=False, save=True)
 lexer = Lexer(table=table, eof=G.EOF)
 print("Hello World342")
 
@@ -94,13 +94,3 @@ a.visit(ast)
 print(a.ans)
 
 semantic_check_pipeline(ast, True)
-
-# print("========== STATES ==========")
-# for item in dfa.map.items():
-#     print(item)
-# print("========== FINALS ==========")
-# for item in dfa.finals:
-#     print(item)
-# print("========== START ===========")
-# print(dfa.start)
-# print("============================")

@@ -5,7 +5,7 @@ from src.hulk.semantic_check.variable_collector import VariableCollector
 
 def formatErrors(vector) :
     for error in vector:
-        print("\t ❌ Error: " + str(error)) 
+        print("\t ❌ Semantic Error: " + str(error)) 
 
 def semantic_check_pipeline(ast, verbose=False):
     if verbose:
