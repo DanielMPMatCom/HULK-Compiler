@@ -7,22 +7,31 @@ from hulk.lexer.token_type import TokenType
 from hulk.lexer.regex import Regex
 from cmp.evaluation import evaluate_reverse_parse, evaluate_reverse_parse_plus
 from cmp.formatVisitor import FormatVisitor
-
-
-# from cmp.tools.parsing import LR1Parser
+from hulk.semantic_check.semantic_check_pipeline import semantic_check_pipeline
 
 parser = LR1Parser(G=G, load=True)
 
 lexer = Lexer(table=table, eof=G.EOF)
 
-code_example = """
-{
-    print(42);
-    let a = 42;
-    let b =231;
-    let c = a + b;
+code_example ="""type Range(min:Number, max:Number) {
+    min = min;
+    max = max;
+    current = min - 1;
+
+    next(): Boolean => (self.current := self.current + 1) < self.max;
+    current(): Number => self.current;
 }
-"""
+type Point(x,y) {
+    x = x;
+    y = y;
+
+    getX() => self.x;
+    getY() => self.y;
+
+    setX(x) => self.x := x;
+    setY(y) => self.y := y;
+}
+print(5)"""
 print(code_example)
 tokens = lexer(code_example)
 
@@ -33,6 +42,7 @@ for token in tokens:
     )
 
 parse, operations = parser(tokens)
+print(parse)
 if parser.errors:
     print("Parser Errors:", parser.errors)
     exit(1)
@@ -44,6 +54,8 @@ print(" - - - -- - - - - VISITOR  - -- - - - - - - - - -- ")
 a = FormatVisitor()
 a.visit(ast)
 print(a.ans)
+
+semantic_check_pipeline(ast, True)
 
 # print("========== STATES ==========")
 # for item in dfa.map.items():

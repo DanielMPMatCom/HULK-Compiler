@@ -1,5 +1,5 @@
 import cmp.visitor as visitor
-from hulk_ast import*
+from hulk.hulk_ast import*
 from cmp.semantic import*
 
 class TypeChecker():
@@ -149,30 +149,30 @@ class TypeChecker():
         condition_types = [self.visit(condition) for condition in node.conditions]
         for condition_type in condition_types:
             if condition_type != BoolType():
-                self.errors.append(SemanticError(f'Error: {condition_type.name} does not conform to Bool', node.line, node.column))
+                self.errors.append(SemanticError(f'Error: {condition_type.name} does not conform to Boolean', node.line, node.column))
         expression_types = [self.visit(expression) for expression in node.expressions]
         else_type = self.visit(node.else_expression)
         return lowest_common_ancestor(expression_types + [else_type])
 
     @visitor.when(WhileNode)
-    def visist(self, node : WhileNode):
+    def visit(self, node : WhileNode):
         condition_type = self.visit(node.condition)
         if condition_type != BoolType():
-            self.errors.append(SemanticError(f'Error: {condition_type.name} does not conform to Bool', node.line, node.column))
-        return self.visist(node.expression)
+            self.errors.append(SemanticError(f'Error: {condition_type.name} does not conform to Boolean', node.line, node.column))
+        return self.visit(node.expression)
     
     @visitor.when(ForNode)
     def visit(self, node : ForNode):
-        iterable_type : Type = self.visist(node.iterable_expression)
+        iterable_type : Type = self.visit(node.iterable_expression)
         protocol_iterable = self.context.get_protocol('Iterable')
         if not iterable_type.conforms_to(protocol_iterable):
             self.errors.append(SemanticError(f'Error: {iterable_type.name} does not conform to {protocol_iterable.name}', node.line, node.column))
-        return self.visist(node.expression)
+        return self.visit(node.expression)
     
     @visitor.when(DestructiveOperationNode)
     def visit(self, node : DestructiveOperationNode):
         current_type : Type = self.visit(node.destiny)
-        new_type = self.visist(node.expression)
+        new_type = self.visit(node.expression)
         if current_type.name == 'Self':
             self.errors.append(SemanticError(f'You cannot reassign a Self variable', node.line, node.column))
             return ErrorType()
@@ -188,7 +188,7 @@ class TypeChecker():
         except SemanticError as error:
             self.errors.append(str(error))
             return ErrorType()
-        argument_types = [self.visist(argument) for argument in node.args]
+        argument_types = [self.visit(argument) for argument in node.args]
         if len(argument_types) != len(new_type.param_types):
             self.errors.append(SemanticError(f'Error: {new_type.name} expects {len(new_type.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
             return ErrorType()
@@ -201,7 +201,7 @@ class TypeChecker():
     @visitor.when(IsNode)
     def visit(self, node : IsNode):
         self.visit(node.expression)
-        boolean_type = self.context.get_type('Bool')
+        boolean_type = self.context.get_type('Boolean')
         try:
             self.context.type_protocol_or_vector(node.type)
         except SemanticError as error:
@@ -223,13 +223,13 @@ class TypeChecker():
     
     @visitor.when(FunctionCallNode)
     def visit(self, node : FunctionCallNode):
-        argument_types = [self.visist(argument) for argument in node.args]
+        argument_types = [self.visit(argument) for argument in node.args]
         try:
             function : Function = self.context.get_function_by_name(node.identifier)
         except SemanticError as error:
             self.errors.append(str(error))
             for arg in node.args:
-                self.visist(arg)
+                self.visit(arg)
             return ErrorType()
         if len(argument_types) != len(function.param_types):
             self.errors.append(SemanticError(f'Error: {function.name} expects {len(function.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
@@ -242,8 +242,8 @@ class TypeChecker():
     
     @visitor.when(MethodCallNode)
     def visit(self, node : MethodCallNode):
-        argument_types = [self.visist(argument) for argument in node.args]
-        object_type : Type = self.visist(node.object_identifier)
+        argument_types = [self.visit(argument) for argument in node.args]
+        object_type : Type = self.visit(node.object_identifier)
         if isinstance(object_type, ErrorType):
             return ErrorType()
         try:
@@ -254,7 +254,7 @@ class TypeChecker():
         except SemanticError as error:
             self.errors.append(str(error))
             for arg in node.args:
-                self.visist(arg)
+                self.visit(arg)
             return ErrorType()
         if len(argument_types) != len(method.param_types):
             self.errors.append(SemanticError(f'Error: {method.name} expects {len(method.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
@@ -267,7 +267,7 @@ class TypeChecker():
     
     @visitor.when(AttributeCallNode)
     def visit(self, node : AttributeCallNode):
-        object_type : Type = self.visist(node.object_identifier)
+        object_type : Type = self.visit(node.object_identifier)
         if isinstance(object_type, ErrorType):
             return ErrorType()
         if object_type == AutoReferenceType():
@@ -286,7 +286,7 @@ class TypeChecker():
         if self.current_method is None:
             self.errors.append(SemanticError('Error: You cannot use base outside a method', node.line, node.column))
             for argument in node.args:
-                self.visist(argument)
+                self.visit(argument)
             return ErrorType()
         try:
             method : Method = self.current_type.parent.get_method(self.current_method.name)
@@ -295,9 +295,9 @@ class TypeChecker():
         except SemanticError:
             self.errors.append(SemanticError('Error: You cannot use base in a method that is not overriding', node.line, node.column))
             for argument in node.args:
-                self.visist(argument)
+                self.visit(argument)
             return ErrorType()
-        argument_types = [self.visist(argument) for argument in node.args]
+        argument_types = [self.visit(argument) for argument in node.args]
         if len(argument_types) != len(method.param_types):
             self.errors.append(SemanticError(f'Error: {method.name} expects {len(method.param_types)} arguments but {len(argument_types)} were given', node.line, node.column))
             return ErrorType()
@@ -310,11 +310,11 @@ class TypeChecker():
     @visitor.when(IndexNode)
     def visit(self, node : IndexNode):
         num_type = self.context.get_type('Number')
-        index_type : Type = self.visist(node.index)
+        index_type : Type = self.visit(node.index)
         if not index_type.conforms_to(num_type):
             self.errors.append(SemanticError(f'Error: {index_type.name} does not conform to {num_type.name}', node.line, node.column))
             return ErrorType()
-        object_type : Type = self.visist(node.object)
+        object_type : Type = self.visit(node.object)
         if isinstance(object_type, ErrorType):
             return ErrorType()
         if not isinstance(object_type, VectorType):
@@ -323,7 +323,7 @@ class TypeChecker():
         return object_type.element_types()
     
     @visitor.when(InitializeVectorNode)
-    def visist(self, node : InitializeVectorNode):
+    def visit(self, node : InitializeVectorNode):
         elements_types = [self.visit(element) for element in node.elements]
         low_com_anc = lowest_common_ancestor(elements_types)
         if isinstance(low_com_anc, ErrorType):
@@ -332,9 +332,9 @@ class TypeChecker():
     
     @visitor.when(InitializeVectorListComprehensionNode)
     def visit(self, node : InitializeVectorListComprehensionNode):
-        vector_iterable_type : Type = self.visist(node.iterable_expression)
+        vector_iterable_type : Type = self.visit(node.iterable_expression)
         protocol_iterable = self.context.get_protocol('Iterable')
-        return_type = self.visist(node.operation)
+        return_type = self.visit(node.operation)
         if not vector_iterable_type.conforms_to(protocol_iterable):
             self.errors.append(SemanticError(f'Error: {vector_iterable_type.name} does not conform to {protocol_iterable.name}', node.line, node.column))
             return ErrorType()
@@ -362,7 +362,7 @@ class TypeChecker():
 
     @visitor.when(BoolBinaryOpNode)
     def visit(self, node : BoolBinaryOpNode):
-        boolean_type = self.context.get_type('Bool')
+        boolean_type = self.context.get_type('Boolean')
         left_type : Type = self.visit(node.left_expression)
         right_type : Type = self.visit(node.right_expression)
         if not left_type.conforms_to(boolean_type) or not right_type.conforms_to(boolean_type):
@@ -377,7 +377,7 @@ class TypeChecker():
         if not left_type.conforms_to(right_type) and not right_type.conforms_to(left_type):
             self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
-        return self.context.get_type('Bool')
+        return self.context.get_type('Boolean')
     
     @visitor.when(InequalityBinaryOpNode)
     def visit(self, node : ArithmeticBinaryOpNode):
@@ -386,7 +386,7 @@ class TypeChecker():
         if left_type != NumberType() or right_type != NumberType():
             self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
-        return self.context.get_type('Bool')
+        return self.context.get_type('Boolean')
 
     @visitor.when(StringBinaryOpNode)
     def visit(self, node : StringBinaryOpNode):
@@ -418,7 +418,7 @@ class TypeChecker():
     
     @visitor.when(NotUnaryOpNode)
     def visit(self, node : NotUnaryOpNode):
-        boolean_type = self.context.get_type('Bool')
+        boolean_type = self.context.get_type('Boolean')
         expression_type : Type = self.visit(node.expression)
         if expression_type != boolean_type:
             self.errors.append(SemanticError(f'Error: Invalid operation {node.operator} with {expression_type.name}', node.line, node.column))

@@ -31,20 +31,21 @@ class ExpressionNode(Node, ABC):
 #----------------------------------------------------------Level2---------------------------------------------------------#
 
 class TypeDeclarationNode(DeclarationNode):
-    def __init__(self, identifier, params, type_body, type_parent, type_parent_args=None):
+    def __init__(self, identifier, params, type_body, type_parent=None, type_parent_args=None):
         DeclarationNode.__init__(self)
         if params and len(params) > 0:
-            params_ids, params_types = [(param[0], param[1]) for param in params]
+            param_ids = [param[0] for param in params]
+            param_types = [param[1] for param in params]
         elif params:
-            params_ids, params_types = [], []
+            param_ids, param_types = [], []
         else: 
-            params_ids, params_types = None, None
+            param_ids, param_types = None, None
 
         methods = [method for method in type_body if isinstance(method, MethodNode)]
         attributes = [attr for attr in type_body if isinstance(attr, AttributeNode)]
         self.identifier = identifier
-        self.params_ids = params_ids
-        self.params_types = params_types
+        self.param_ids = param_ids
+        self.param_types = param_types
         self.methods = methods
         self.attributes = attributes
         self.parent = type_parent
@@ -54,11 +55,12 @@ class FunctionDeclarationNode(DeclarationNode):
     def __init__(self, identifier, params, expression, type=None):
         DeclarationNode.__init__(self)
         if len(params) > 0:
-            params_ids, params_types = [(param[0], param[1]) for param in params]
+            param_ids = [param[0] for param in params]
+            param_types = [param[1] for param in params]
         else: 
-            params_ids, params_types = [], []
-        self.params_ids = params_ids
-        self.params_types = params_types
+            param_ids, param_types = [], []
+        self.param_ids = param_ids
+        self.param_types = param_types
         self.identifier = identifier
         self.expression = expression
         self.type = type
@@ -74,11 +76,12 @@ class MethodNode(DeclarationNode):
     def __init__(self, identifier, params, expression, type=None):
         DeclarationNode.__init__(self)
         if len(params) > 0:
-            params_ids, params_types = [(param[0], param[1]) for param in params]
+            param_ids = [param[0] for param in params]
+            param_types = [param[1] for param in params]
         else: 
-            params_ids, params_types = [], []
-        self.params_ids = params_ids
-        self.params_types = params_types
+            param_ids, param_types = [], []
+        self.param_ids = param_ids
+        self.param_types = param_types
         self.identifier = identifier
         self.expression = expression
         self.type = type
@@ -94,12 +97,13 @@ class ProtocolMethodSignatureNode(DeclarationNode):
     def __init__(self, identifier, params, type):
         DeclarationNode.__init__(self)
         if len(params) > 0:
-            params_ids, params_types = [(param[0], param[1]) for param in params]
+            param_ids = [param[0] for param in params]
+            param_types = [param[1] for param in params]
         else:
-            params_ids, params_types = [], []
+            param_ids, param_types = [], []
         self.identifier = identifier
-        self.params_ids = params_ids
-        self.params_types = params_types
+        self.param_ids = param_ids
+        self.param_types = param_types
         self.type = type
 
 class VectorNode(ExpressionNode):
@@ -128,7 +132,8 @@ class LetInNode(ExpressionNode):
 class IfElseNode(ExpressionNode):
     def __init__(self, condition_expressions: List[Tuple], else_expression):
         ExpressionNode.__init__(self)
-        conditions, expressions = [(element[0], element[1]) for element in condition_expressions]
+        conditions = [element[0] for element in condition_expressions]
+        expressions = [element[1] for element in condition_expressions]
         self.conditions = conditions
         self.expressions = expressions
         self.else_expression = else_expression
@@ -274,90 +279,85 @@ class NotUnaryOpNode(UnaryExpressionNode, ABC):
 
 class OrNode(BoolBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '|'
 
 class AndNode(BoolBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '&'
 
 class EqualNode(EqualityBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '=='
 
 class NonEqualNode(InequalityBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '!='
 
 class LessThanNode(InequalityBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '<'
 
 class LessEqualNode(InequalityBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '<='
 
 class GreaterThanNode(InequalityBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '>'
 
 class GreaterEqualNode(InequalityBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '>='
 
 class ConcatNode(StringBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '@'
 
 class SpacedConcatNode(StringBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '@@'
 
 class PlusNode(ArithmeticBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '+'
 
 class MinusNode(ArithmeticBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '-'
 
 class StarNode(ArithmeticBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '*'
 
 class DivNode(ArithmeticBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '/'
 
 class ModNode(ArithmeticBinaryOpNode):
     def __init__(self, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = '%'
 
 class PowNode(ArithmeticBinaryOpNode):
     def __init__(self, operator, left_expression, right_expression):
-        BinaryExpressionNode.__init__(left_expression, right_expression)
+        BinaryExpressionNode.__init__(self, left_expression, right_expression)
         self.operator = operator
-
-class MinusNode(SignUnaryOpNode):
-    def __init__(self, expression):
-        UnaryExpressionNode.__init__(expression)
-        self.operator = '-'
 
 class NotNode(NotUnaryOpNode):
     def __init__(self, expression):
-        UnaryExpressionNode.__init__(expression)
+        UnaryExpressionNode.__init__(self, expression)
         self.operator = '!'

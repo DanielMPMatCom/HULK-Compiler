@@ -1,5 +1,5 @@
 import cmp.visitor as visitor
-from hulk_ast import*
+from hulk.hulk_ast import*
 from cmp.semantic import*
 
 
@@ -17,9 +17,10 @@ class TypeCollector():
         self.context = Context()
     
         obj_type = self.context.create_type('Object')
+        err_type = self.context.create_type('<undefined>')
         num_type = self.context.create_type('Number')
         num_type.set_parent(obj_type)
-        bool_type = self.context.create_type('Bool')
+        bool_type = self.context.create_type('Boolean')
         bool_type.set_parent(obj_type)
         str_type = self.context.create_type('String')
         str_type.set_parent(obj_type)

@@ -14,9 +14,9 @@ class ShiftReduceParser:
         self.goto = {}
         self.errors = []
 
-        print("LOADING PARSING ...")
         serialized_instance = Serialized()
         if load:
+            print("LOADING PARSING 😬...")
             try:
                 # rebuild Grammar
                 stored_action = serialized_instance.load_object("action")
@@ -36,6 +36,7 @@ class ShiftReduceParser:
                 for key, value in stored_goto.items():
                     state, symbol = key
                     self.goto[state, G[str(symbol)]] = value
+                print("PARSER LOADED OK! 😌✅")
 
             except:
                 load = False
@@ -48,7 +49,6 @@ class ShiftReduceParser:
             serialized_instance.save_object(self.action, "action")
             serialized_instance.save_object(self.goto, "goto")
 
-        print("PARSER LOADED OK!")
 
     def _build_parsing_table(self):
         raise NotImplementedError()
@@ -61,7 +61,7 @@ class ShiftReduceParser:
     def find_unexpected_symbol_and_notify(self, state, token):
         error = f"Unexpected symbol {token.lex} at row {token.row} and column {token.column}"
         possibilities = list(filter(lambda x: x[0] == state, self.action.keys()))
-        error += " Possibilities result " + str([x[1] for x in possibilities])
+        error += ". Possible results " + str([x[1] for x in possibilities])
         self.errors.append(error)
 
     def trackSymbols(self, state, lookahead):
@@ -125,7 +125,7 @@ class ShiftReduceParser:
                 # if state is None or cursor is None:
                 #     return [], []
                 # lookahead = w[cursor]
-                return [], []
+                return output, operations
 
             action, tag = self.action[state, lookahead]
 

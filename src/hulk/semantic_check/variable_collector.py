@@ -1,5 +1,5 @@
 import cmp.visitor as visitor
-from hulk_ast import*
+from hulk.hulk_ast import*
 from cmp.semantic import*
 
 class VariableCollector:
@@ -27,11 +27,11 @@ class VariableCollector:
         self.current_type = self.context.get_type(node.identifier)
         if isinstance(self.current_type, ErrorType):
             return
-        if node.type_parent_args is None and node.params_ids is not None:
+        if node.type_parent_args is None and node.param_ids is not None:
             node.type_parent_args = []
-        if node.type_parent_args is None and node.params_ids is None:
+        if node.type_parent_args is None and node.param_ids is None:
             self.current_type.set_parameters()
-            node.params_ids = self.current_type.param_names
+            node.param_ids = self.current_type.param_names
             node.params_types = self.current_type.param_types
             for param_name in self.current_type.param_names:
                 node.type_parent_args.append(IDNode(param_name))

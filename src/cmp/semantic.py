@@ -179,7 +179,7 @@ class Function:
 class Protocol:
     def __init__(self, name, current_node=None):
         self.name = name
-        self.methods = [Method]
+        self.methods : "list[Method]" = []
         self.parent = None
         self.current_node = current_node
 
@@ -259,7 +259,7 @@ class StringType(Type):
     
 class BoolType(Type):
     def __init__(self):
-        Type.__init__(self, 'Bool')
+        Type.__init__(self, 'Boolean')
         self.set_parent(ObjectType())
 
     def __eq__(self, other):
@@ -297,10 +297,13 @@ class UndefinedType(Type):
         return isinstance(other, UndefinedType) or self.name == other.name
     
 class AutoReferenceType(Type):
-    def __init__(self):
+    def __init__(self, self_type: Type = None):
         Type.__init__(self, 'Self')
+        self.self_type = self_type
 
     def get_attribute(self, name: str):
+        if self.self_type:
+            return self.self_type.get_attribute(name)
         return Type.get_attribute(name)
 
     def __eq__(self, other):
@@ -362,7 +365,7 @@ class Context:
             raise SemanticError(f'Protocol "{name}" is not defined.')
         
     def type_protocol_or_vector(self, type_):
-        if isinstance(self.types[type_], VectorNode):
+        if isinstance(self.types[type_], VectorType):
             vector_element_type = self.type_protocol_or_vector(type_.element_type)
             return VectorType(vector_element_type)
         else:

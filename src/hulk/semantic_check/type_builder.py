@@ -1,5 +1,5 @@
 import cmp.visitor as visitor
-from hulk_ast import*
+from hulk.hulk_ast import*
 from cmp.semantic import*
 
 
@@ -28,7 +28,7 @@ class TypeBuilder():
 
         self.current_type.param_names, self.current_type.param_types = self.param_names_and_types(node)
         
-        if node.parent in ['Number', 'String', 'Bool']:
+        if node.parent in ['Number', 'String', 'Boolean']:
             self.errors.append(SemanticError(f'Type {node.identifier} is inheriting from forbidden type {node.parent}.', node.line, node.column))
         elif node.parent is not None:
             try:
@@ -60,7 +60,7 @@ class TypeBuilder():
     def visit(self, node: FunctionDeclarationNode):
         self.param_names, self.param_types = self.param_names_and_types(node)
 
-        if node.return_type is None:
+        if node.type is None:
             return_type = UndefinedType()
         else:
             try:
@@ -156,7 +156,7 @@ class TypeBuilder():
         names = []
         types = []
         for param_name in node.param_ids:
-            param_type = node.param_types[node.param_types.index(param_name)]
+            param_type = node.param_types[node.param_ids.index(param_name)]
             if param_name in names:
                 self.errors.append(SemanticError(f'Parameter {param_name} already declared.', node.line, node.column))
                 types[names.index(param_name)] = ErrorType()
@@ -170,5 +170,5 @@ class TypeBuilder():
                         self.errors.append(str(error))
                         param_type = ErrorType()
                 names.append(param_name)
-                types.append(self.context.get_type(param_type))
+                types.append(self.context.get_type(param_type.name))
         return names, types

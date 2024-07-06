@@ -41,7 +41,7 @@ semi, colon, comma, dot, opar, cpar, ocurly, ccurly, obrack, cbrack = G.Terminal
 plus, minus, star, div, power, power_star , concat, dobleconcat, arrow, mod = G.Terminals('+ - * / ^ ** @ @@ => %')
 eq, neq, le, leq, gr, greq, eqeq, dest_eq = G.Terminals('= != < <= > >= == :=')
 and_, or_, not_ = G.Terminals('& | !') 
-num_, str_, bool_, id_, let_, in_, is_, as_, if_, elif_, else_, while_, for_, new, type_id = G.Terminals('num str bool id let in is as if elif else while for new type_id')
+num_, str_, bool_, id_, let_, in_, is_, as_, if_, elif_, else_, while_, for_, new = G.Terminals('num str bool id let in is as if elif else while for new')
 func_, type_, inherits_, protocol_, extends_, base_ = G.Terminals('func type inherits protocol extends base')
 bar_bar_ = G.Terminal('||')
 
@@ -148,7 +148,7 @@ Arithmetic_Expression_s_d_mod %= Arithmetic_Expression_s_d_mod + mod + Plus_Minu
 Arithmetic_Expression_s_d_mod %= Plus_Minus_Sign_Operation, lambda h,s: s[1], None
 
 Plus_Minus_Sign_Operation %= plus + Pow_Operation, lambda h,s: s[2], None, None
-Plus_Minus_Sign_Operation %= minus + Pow_Operation, lambda h,s: MinusNode(s[2]), None, None
+Plus_Minus_Sign_Operation %= minus + Pow_Operation, lambda h,s: NotUnaryOpNode(s[2]), None, None
 Plus_Minus_Sign_Operation %= Pow_Operation, lambda h,s: s[1], None
 
 Pow_Operation %= New_Type_Operation + power + Pow_Operation, lambda h,s: PowNode(s[2], s[1], s[3]), None, None, None
