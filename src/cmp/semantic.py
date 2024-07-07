@@ -379,11 +379,11 @@ class Context:
             raise SemanticError(f'Protocol "{name}" is not defined.')
         
     def type_protocol_or_vector(self, type_):
-        try:
-            self.types[type_]
-        except:
-            raise SemanticError(f"{type_} is not defined")
-        if isinstance(self.types[type_], VectorType):
+        # try:
+        #     self.types[type_]
+        # except:
+        #     raise SemanticError(f"{type_} is not defined")
+        if isinstance(type_, VectorType):
             vector_element_type = self.type_protocol_or_vector(type_.element_type)
             return VectorType(vector_element_type)
         else:

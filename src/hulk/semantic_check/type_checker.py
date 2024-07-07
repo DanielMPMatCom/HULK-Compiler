@@ -122,7 +122,10 @@ class TypeChecker():
     def visit(self, node : VariableDeclarationNode):
         scope = node.scope
         inferred_type : Type = self.visit(node.expression)
-        variable_type = scope.get_global_variable_info(node.identifier).type
+        variable_info = scope.get_global_variable_info(node.identifier)
+        variable_type = variable_info.type
+        if variable_type.name == "<undefined>":
+            variable_info.type = inferred_type
         if not inferred_type.conforms_to(variable_type):
             self.errors.append(SemanticError(f'{inferred_type.name} does not conform to {variable_type.name}', node.line, node.column))
             variable_type = ErrorType()
@@ -329,9 +332,12 @@ class TypeChecker():
     
     @visitor.when(InitializeVectorListComprehensionNode)
     def visit(self, node : InitializeVectorListComprehensionNode):
+        
         vector_iterable_type : Type = self.visit(node.iterable_expression)
         protocol_iterable = self.context.get_protocol('Iterable')
         return_type = self.visit(node.operation)
+        # if node.variable_identifier:
+        #     node.scope.define_variable(node.variable_identifier, UndefinedType())
         if not vector_iterable_type.conforms_to(protocol_iterable):
             self.errors.append(SemanticError(f'{vector_iterable_type.name} does not conform to {protocol_iterable.name}', node.line, node.column))
             return ErrorType()

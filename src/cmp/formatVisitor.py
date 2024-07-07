@@ -300,7 +300,7 @@ class FormatVisitor:
             + " line: "
             + str(node.line)
         )
-        self.add_ans(f"Operation: {node.operation}")
+        self.visit(node.operation)
         self.add_ans(f"Variable Identifier: {node.variable_identifier}")
         self.increase_tabs()
         self.visit(node.iterable_expression)
