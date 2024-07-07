@@ -16,7 +16,7 @@ parser = LR1Parser(G=G, load=load, save=save)
 lexer = Lexer(table=table, eof=G.EOF, load=load, save=save)
 
 
-code_example = """
+code_example = r"""
 type Point {
     x: Number = x;
     y: Number = y;
@@ -327,6 +327,20 @@ let numbers = [1,2,3,4,5,6,7,8,9] in print(numbers[7]);
 
 let squares = [x^2 || x in range(1,10)] in print(squares);
 
+let a = 42 in if (a % 2 == 0) print("Even") else print("odd");
+let a = 42 in print(if (a % 2 == 0) "even" else "odd");
+let a = 42 in
+    if (a % 2 == 0) {
+        print(a);
+        print("Even");
+    }
+    else print("Odd");
+let a = 42, mod = a % 3 in
+    print(
+        if (mod == 0) "Magic"
+        elif (mod % 3 == 1) "Woke"
+        else "Dumb"
+    );
 
 }
 """
