@@ -1,6 +1,6 @@
-from src.hulk.hulk_ast import *
-from src.cmp.semantic import *
-from src.cmp.visitor import visitor
+from hulk.hulk_ast import *
+from cmp.semantic import *
+import cmp.visitor as visitor
 
 import math
 import random
@@ -13,6 +13,7 @@ def Print(x):
 
 
 built_in_func = {
+    "range": lambda x, y: range(x, y),
     "print": lambda x: Print(x),
     "sqrt": lambda x: math.sqrt(x),
     "sin": lambda x: math.sin(x),
@@ -177,30 +178,97 @@ class Interpreter:
         type_node = self.context.get_type(node.identifier, len(node.args))
         type_node: TypeDeclarationNode = copy.deepcopy(type_node)
 
-        if type_node.parent:
-            type_parent: Type = self.context.get_type(type_node.parent)
-            parent_definition: TypeDeclarationNode = type_parent.current_node
+        args = node.args
+        parent = type_node
 
-            for i, vname in enumerate(parent_definition.params_ids):
-                node.scope.define_variable(vname=vname, vtype=None)
-                value = self.visit(node.args[i])
-                node.scope.get_local_variable_info(vname=vname).update(value)
-            
-            for p_attr in parent_definition.attributes:
-                node.scope.define_variable(p_attr.identifier, None)
-                value = 
-                
+        while parent:
+            scope = parent.scope
+            for i, vname in enumerate(parent.params_ids):
+                scope.define_variable(vname=vname, vtype=None)
+                value = self.visit(args[i])
+                scope.get_local_variable_info(vname=vname).update(value)
 
+            for attr in parent.attributes:
+                scope.define_variable(f"self.{attr.identifier}", None)
+                value = self.visit(attr.expression)
+                scope.get_local_variable_info(f"self.{attr.identifier}").update(value)
+
+            for method in parent.methods:
+                scope.define_function(
+                    method.identifier, method.params_ids, None, method.expression
+                )
+
+            if len(parent.type_parent_args) > 0:
+                args = [self.visit(arg) for arg in parent.type_parent_args]
+
+            if parent.parent:
+                oldChild = parent
+                parent: TypeDeclarationNode = self.context.get_type(
+                    parent.parent, len(parent.type_parent_args)
+                ).current_node
+                parent = copy.deepcopy(parent)
+                scope.parent = parent.scope  # 100% real, simetrico y no fake
+
+                for p_method in parent.methods:
+                    for c_method in oldChild.methods:
+                        if p_method.identifier == c_method.identifier:
+                            c_method.scope.define_function(
+                                "base",
+                                p_method.params_ids,
+                                None,
+                                body=p_method.expression,
+                            )
+            else:
+                break
+
+        return type_node
 
     # IsNode(ExpressionNode):
     @visitor.when(IsNode)
     def visit(self, node: IsNode):
-        pass
+        value = self.visit(node.expression)
+        type = self.context.get_type(node.type)
+        if isinstance(value, float):
+            return type == "Number"
+        elif isinstance(value, str):
+            return type == "String"
+        elif isinstance(value, bool):
+            return type == "Bool"
+        elif isinstance(value, list):
+            return type == "Vector"
+        else:
+            try:
+                value: TypeDeclarationNode
+                while value:
+                    if value.identifier == node.type:
+                        return True
+                    if value.parent:
+                        value = value.parent
+                        value = Context.get_type(
+                            value.identifier, len(value.type_parent_args)
+                        ).current_node
+                    else:
+                        value = None
+            except:
+                return False
+
+        return False
 
     # AsNode(ExpressionNode):
     @visitor.when(AsNode)
     def visit(self, node: AsNode):
-        pass
+        value = self.visit(node.expression)
+        value: TypeDeclarationNode
+        tmp = value
+        while tmp.identifier != node.type:
+            if tmp.parent:
+                tmp = self.context.get_type(
+                    tmp.parent, len(tmp.type_parent_args)
+                ).current_node
+            else:
+                break
+        node.scope = tmp.scope
+        return node
 
     # FunctionCallNode(ExpressionNode):
     @visitor.when(FunctionCallNode)
@@ -221,20 +289,67 @@ class Interpreter:
         return self.visit(function.body)
 
     # MethodCallNode(ExpressionNode):
+    @visitor.when(MethodCallNode)
+    def visit(self, node: MethodCallNode):
+        object_instance: TypeDeclarationNode = node.scope.get_global_variable_info(
+            node.object_identifier
+        ).value
+        method: Function = object_instance.scope.get_global_function_info(
+            node.method_identifier
+        )
+
+        for i, vname in enumerate(method.param_names):
+            method.body.scope.define_variable(vname, None)  # no hagas eso
+            value = self.visit(node.args[i])
+            method.body.scope.get_local_variable_info(vname).update(value)
+
+        return self.visit(method.body)
 
     # AttributeCallNode(ExpressionNode):
+    @visitor.when(AttributeCallNode)
+    def visit(self, node: AttributeCallNode):
+
+        object_instance: TypeDeclarationNode = node.scope.get_global_variable_info(
+            node.object_identifier
+        ).value
+
+        return object_instance.scope.get_global_variable_info(
+            node.attribute_identifier
+        ).value
 
     # BaseCallNode(ExpressionNode):
+    @visitor.when(BaseCallNode)
+    def visit(self, node: BaseCallNode):
+        function: Function = node.scope.get_global_function_info("base").value
+        for i, vname in enumerate(function.param_names):
+            function.body.scope.define_variable(vname, None)
+            value = self.visit(node.args[i])
+            function.body.scope.get_local_variable_info(vname).update(value)
+
+        return self.visit(function.body)
 
     # IndexNode(ExpressionNode):
-
-    # UnaryExpressionNode(ExpressionNode, ABC):
-
-    # BinaryExpressionNode(ExpressionNode, ABC):
+    @visitor.when(IndexNode)
+    def visit(self, node: IndexNode):
+        vector = node.scope.get_global_variable_info(node.object).value
+        index = self.visit(node.index)
+        return vector[index]
 
     # InitializeVectorNode(ExpressionNode):
+    @visitor.when(InitializeVectorNode)
+    def visit(self, node: InitializeVectorNode):
+        return [self.visit(element) for element in node.elements]
 
     # InitializeVectorListComprehensionNode(ExpressionNode):
+    @visitor.when(InitializeVectorListComprehensionNode)
+    def visit(self, node: InitializeVectorListComprehensionNode):
+        vector = self.visit(node.iterable_expression)
+        evaluation = []
+        for i in vector:
+            node.operation.scope.define_variable(node.identifier, None)
+            node.operation.scope.get_local_variable_info(node.identifier).update(i)
+            evaluation.append(self.visit(node.operation))
+        return evaluation
 
     # NumNode(AtomNode):
     @visitor.when(NumNode)
@@ -249,12 +364,13 @@ class Interpreter:
     # BoolNode(AtomNode):
     @visitor.when(BoolNode)
     def visit(self, node: BoolNode):
-        return node.lexeme is "true"
+        return node.lexeme == "true"
 
     # IDNode(AtomNode):
     @visitor.when(IDNode)
     def visit(self, node: IDNode):
-        return node.lexeme
+        print("lexeme", node.lexeme)
+        return node.scope.get_global_variable_info(node.lexeme).value
 
     # OrNode(BoolBinaryOpNode):
     # AndNode(BoolBinaryOpNode):
