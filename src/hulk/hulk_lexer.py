@@ -3,15 +3,32 @@ from hulk.lexer.regex import Regex
 from cmp.automata import State
 from hulk.lexer.regex_grammar import G
 from hulk.parser.lr1 import LR1Parser
+from serialized.Serialized import Serialized
+
 
 class Lexer:
-    def __init__(self, table, eof):
+    def __init__(self, table, eof, load=False, save=False):
         self.errors = []
         self.eof = eof
         self.parser = LR1Parser(G)
-        self.regexs = self._build_regexs(table)
-        self.automaton = self._build_automaton()
+        print("regex parser build")
 
+        serilizer = Serialized()
+
+        if load:
+            print("LOADING REGEX 😱...")
+            try:
+                self.regexs = serilizer.load_object("regexs")
+                print("REGEX LOADED OK! 🥵✅")
+            except:
+                print("Load regex failed...")
+                save = True
+                load = False
+        if save:
+            self.regexs = self._build_regexs(table)
+            serilizer.save_object(object=self.regexs, object_name="regexs")
+
+        self.automaton = self._build_automaton()
 
     def _build_regexs(self, table):
         regexs = []

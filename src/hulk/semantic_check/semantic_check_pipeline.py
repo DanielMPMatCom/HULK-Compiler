@@ -1,7 +1,7 @@
-from src.hulk.semantic_check.type_collector import TypeCollector
-from src.hulk.semantic_check.type_builder import TypeBuilder
-from src.hulk.semantic_check.type_checker import TypeChecker
-from src.hulk.semantic_check.variable_collector import VariableCollector
+from hulk.semantic_check.type_collector import TypeCollector
+from hulk.semantic_check.type_builder import TypeBuilder
+from hulk.semantic_check.type_checker import TypeChecker
+from hulk.semantic_check.variable_collector import VariableCollector
 
 def formatErrors(vector) :
     for error in vector:
