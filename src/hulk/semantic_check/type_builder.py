@@ -73,7 +73,7 @@ class TypeBuilder():
                 return_type = ErrorType()
 
         try:
-            self.context.create_function(node.identifier, self.param_names, self.param_types, return_type)
+            self.context.create_function(node.identifier, self.param_names, self.param_types, return_type, node)
         except SemanticError as error:
             self.errors.append(SemanticError(error, node.line, node.column))
 
@@ -118,7 +118,7 @@ class TypeBuilder():
                 self.errors.append(SemanticError(error, node.line, node.column))
                 return_type = ErrorType()
         try:
-            self.current_type.define_method(node.identifier, param_names, param_types, return_type)
+            self.current_type.define_method(node.identifier, param_names, param_types, return_type, node)
         except SemanticError as error:
             self.errors.append(SemanticError(error, node.line, node.column))
 
@@ -133,7 +133,7 @@ class TypeBuilder():
                 self.errors.append(SemanticError(error, node.line, node.column))
                 attr_type = ErrorType()
         try:
-            self.current_type.define_attribute(node.identifier, attr_type)
+            self.current_type.define_attribute(node.identifier, attr_type, node)
         except SemanticError as error:
             self.errors.append(SemanticError(error, node.line, node.column))
 
@@ -146,7 +146,7 @@ class TypeBuilder():
             self.errors.append(SemanticError(error, node.line, node.column))
             return_type = ErrorType()
         try:
-            self.current_type.define_method(node.identifier, param_names, param_types, return_type)
+            self.current_type.define_method(node.identifier, param_names, param_types, return_type, node)
         except SemanticError as error:
             self.errors.append(SemanticError(error, node.line, node.column))
 

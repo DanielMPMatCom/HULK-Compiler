@@ -59,7 +59,7 @@ class TypeCollector():
     @visitor.when(TypeDeclarationNode)
     def visit(self, node: TypeDeclarationNode):
         try:
-            self.context.create_type(node.identifier)
+            self.context.create_type(node.identifier, node)
         except SemanticError as error:
             self.errors.append(SemanticError(error, node.line, node.column))
             if node.identifier in self.context.types:
@@ -70,7 +70,7 @@ class TypeCollector():
     @visitor.when(ProtocolDeclarationNode)
     def visit(self, node: ProtocolDeclarationNode):
         try:
-            self.context.create_protocol(node.identifier)
+            self.context.create_protocol(node.identifier, node)
         except SemanticError as error:
             self.errors.append(SemanticError(error, node.line, node.column))
             if node.identifier in self.context.protocols:
