@@ -88,7 +88,7 @@ class FormatVisitor:
         )
 
         self.increase_tabs()
-        for i in node.params_ids:
+        for i in node.param_ids:
             self.add_ans(f"Param: {i}")
         self.visit(node.expression)
         self.decrease_tabs()
@@ -257,9 +257,6 @@ class FormatVisitor:
             + " line: "
             + str(node.line)
         )
-        self.increase_tabs()
-        self.visit(node.object)
-        self.decrease_tabs()
 
     @visitor.when(BaseCallNode)
     def visit(self, node: BaseCallNode):

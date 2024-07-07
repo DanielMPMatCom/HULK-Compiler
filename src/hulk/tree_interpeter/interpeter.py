@@ -24,46 +24,51 @@ class RuntimeError(Exception):
         return self.text
 
 
+def rangeWrapperInit(min, max):
+    iterable = []
+    for i in range(min, max):
+        iterable.append(i)
+    return iterable
+
+
+# region Base
+built_in_func = {
+    "range": lambda x: rangeWrapperInit(int(x[0]), int(x[1])),
+    "print": lambda x: Print(*x),
+    "sqrt": lambda x: math.sqrt(*x),
+    "sin": lambda x: math.sin(*x),
+    "cos": lambda x: math.cos(*x),
+    "exp": lambda x: math.exp(*x),
+    "log": lambda x: math.log(*reversed(x)),
+    "rand": lambda: random.random(),
+    "parse": lambda x: float(*x),
+}
+
+binary_operators = {
+    "+": lambda x, y: x + y,
+    "-": lambda x, y: x - y,
+    "*": lambda x, y: x * y,
+    "/": lambda x, y: x / y,
+    "%": lambda x, y: x % y,
+    "@": lambda x, y: str(x) + str(y),
+    ">": lambda x, y: x > y,
+    "<": lambda x, y: x < y,
+    "^": lambda x, y: x**y,
+    "|": lambda x, y: x or y,
+    "&": lambda x, y: x and y,
+    "==": lambda x, y: x == y,
+    "!=": lambda x, y: x != y,
+    ">=": lambda x, y: x >= y,
+    "<=": lambda x, y: x <= y,
+    "**": lambda x, y: x**y,
+    "@@": lambda x, y: str(x) + " " + str(y),
+}
+
+unary_operators = {"!": lambda x: not x, "-": lambda x: -x}
+# endRegion
+
+
 class Interpreter:
-
-    # region Base
-    built_in_func = {
-        "range": lambda x: range(int(x[0]), int(x[1])),
-        "print": lambda x: Print(*x),
-        "sqrt": lambda x: math.sqrt(*x),
-        "sin": lambda x: math.sin(*x),
-        "cos": lambda x: math.cos(*x),
-        "exp": lambda x: math.exp(*x),
-        "log": lambda x: math.log(*reversed(x)),
-        "rand": lambda: random.random(),
-        "parse": lambda x: float(*x),
-    }
-
-    binary_operators = {
-        "+": lambda x, y: x + y,
-        "-": lambda x, y: x - y,
-        "*": lambda x, y: x * y,
-        "/": lambda x, y: x / y,
-        "%": lambda x, y: x % y,
-        "@": lambda x, y: str(x) + str(y),
-        ">": lambda x, y: x > y,
-        "<": lambda x, y: x < y,
-        "^": lambda x, y: x**y,
-        "|": lambda x, y: x or y,
-        "&": lambda x, y: x and y,
-        "==": lambda x, y: x == y,
-        "!=": lambda x, y: x != y,
-        ">=": lambda x, y: x >= y,
-        "<=": lambda x, y: x <= y,
-        "**": lambda x, y: x**y,
-        "@@": lambda x, y: str(x) + " " + str(y),
-    }
-
-    unary_operators = {"!": lambda x: not x, "-": lambda x: -x}
-    # endRegion
-
-    def rangeWrapperInit(self, context, min, max):
-        pass 
 
     # region Visitor
     def __init__(self, context, errors=[]):
@@ -74,7 +79,7 @@ class Interpreter:
         left_value = self.visit(node.left_expression)
         right_value = self.visit(node.right_expression)
         try:
-            return self.binary_operators[node.operator](left_value, right_value)
+            return binary_operators[node.operator](left_value, right_value)
         except Exception as e:
             print(
                 "💥Runtime Error: "
@@ -84,7 +89,7 @@ class Interpreter:
 
     def unary_operation(self, node: UnaryExpressionNode):
         value = self.visit(node.expression)
-        return self.unary_operators[node.operator](value)
+        return unary_operators[node.operator](value)
 
     @visitor.on("node")
     def visit(self, node):
@@ -205,11 +210,26 @@ class Interpreter:
     # NewTypeNode(ExpressionNode):
     @visitor.when(NewTypeNode)
     def visit(self, node: NewTypeNode):
-        type_node = self.context.get_type(node.identifier, len(node.args))
+        print("===================================")
+        print("When times are tough, the tough get going, brrr")
+        print(node.identifier)
+        print(node.args)
+        print(self.context.get_type(node.identifier, len(node.args)))
+        type_node = self.context.get_type(node.identifier, len(node.args)).current_node
+        print("===================================")
+        print("DEEPCOPY BEFORE")
+        print(type_node)
+        print("===================================")
+
         type_node: TypeDeclarationNode = copy.deepcopy(type_node)
 
         args = node.args
         parent = type_node
+
+        print(" = = = == = " * 10)
+        print("NEW TYPE INSTANCE")
+        print(parent)
+        print(" = = = == = " * 10)
 
         while parent:
             scope = parent.scope
@@ -250,7 +270,9 @@ class Interpreter:
                             )
             else:
                 break
-
+        print(" = = = == = " * 10)
+        print(type_node)
+        print(" = = = == = " * 10)
         return type_node
 
     # IsNode(ExpressionNode):
@@ -306,8 +328,8 @@ class Interpreter:
 
         params = [self.visit(param) for param in node.args]
 
-        if node.identifier in self.built_in_func:
-            return self.built_in_func[node.identifier](tuple(params))
+        if node.identifier in built_in_func:
+            return built_in_func[node.identifier](tuple(params))
 
         function: Function = self.context.get_function_by_name(node.identifier)
         scope: Scope = function.body.scope
@@ -325,6 +347,22 @@ class Interpreter:
         object_instance: TypeDeclarationNode = node.scope.get_global_variable_info(
             variable_name
         ).value
+
+        if isinstance(object_instance, list):
+            if node.method_identifier == "next":
+                if len(object_instance) == 0:
+                    return False
+                return True
+            if node.method_identifier == "current":
+                return object_instance.pop(0)
+
+        print(" = = = == = " * 10)
+        print(object_instance)
+        print(node.method_identifier)
+        print(node.scope)
+
+        print(" = = = == = " * 10)
+
         method: Function = object_instance.scope.get_global_function_info(
             node.method_identifier
         )

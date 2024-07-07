@@ -49,6 +49,7 @@ type Range(min:Number, max:Number) {
 }
 
 
+
 function tan(x,y) => sin(x) / cos(y);
 
 function operate(x, y) {
