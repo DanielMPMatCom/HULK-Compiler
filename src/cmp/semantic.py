@@ -365,12 +365,12 @@ class Context:
         except KeyError:
             raise SemanticError(f'Function "{name}" is not defined.')
         
-    def create_protocol(self, name:str):
+    def create_protocol(self, name:str, current_node=None):
         if name in self.protocols:
             raise SemanticError(f'Protocol with the same name ({name}) already in context.')
         if name in self.types:
             raise SemanticError(f'Type with the same name ({name}) already in context.')
-        protocol = self.protocols[name] = Protocol(name)
+        protocol = self.protocols[name] = Protocol(name, current_node)
         return protocol
     
     def get_protocol(self, name:str) -> Protocol:
