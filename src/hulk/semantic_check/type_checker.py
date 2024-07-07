@@ -355,7 +355,7 @@ class TypeChecker():
     
     @visitor.when(BoolNode)
     def visit(self, node : BoolNode):
-        return self.context.get_type('Bool')
+        return self.context.get_type('Boolean')
     
     @visitor.when(IDNode)
     def visit(self, node : IDNode):

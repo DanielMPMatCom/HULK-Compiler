@@ -49,7 +49,10 @@ class TypeBuilder():
                 self.errors.append(SemanticError(error, node.line, node.column))
         else:
             obj_type = self.context.get_type('Object')
-            self.current_type.set_parent(obj_type)
+            try:
+                self.current_type.set_parent(obj_type)
+            except SemanticError as error:
+                self.errors.append(SemanticError(error, node.line, node.column))
 
         for attr in node.attributes:
             self.visit(attr)

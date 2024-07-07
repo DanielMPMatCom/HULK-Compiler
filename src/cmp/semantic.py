@@ -238,6 +238,7 @@ class Protocol:
 class ErrorType(Type):
     def __init__(self):
         Type.__init__(self, '<error>')
+        self.name = "<error>"
 
     def conforms_to(self, other):
         return True
@@ -536,8 +537,8 @@ def _lowest_common_ancestor_rec(type1 : Type, type2 : Type):
 
 def any_equivalent_type(types, type_):
     for type1 in types:
-        if isinstance(type1, type_): return True
-        elif type1 == type_: return True
+        if not(isinstance(type_,Type)) and isinstance(type1, type_): return True
+        elif isinstance(type_,Type) and type1.name == type_.name: return True
     return False
 
 #endregion
