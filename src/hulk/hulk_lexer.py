@@ -1,6 +1,7 @@
 from hulk.utils import Token
 from hulk.lexer.regex import Regex
 from cmp.automata import State
+from hulk.hulk_grammar import G as hulk_grammar
 from hulk.lexer.regex_grammar import G
 from hulk.parser.lr1 import LR1Parser
 from serialized.Serialized import Serialized
@@ -117,6 +118,6 @@ class Lexer:
 
     def __call__(self, text):
         return [
-            Token(lex, token_type, row, column)
+            Token(lex, hulk_grammar[str(token_type)], row, column)
             for lex, token_type, row, column in self._tokenize(text)
         ]

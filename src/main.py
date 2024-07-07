@@ -9,8 +9,11 @@ from cmp.evaluation import evaluate_reverse_parse_plus
 from cmp.formatVisitor import FormatVisitor
 from hulk.semantic_check.semantic_check_pipeline import semantic_check_pipeline
 
-parser = LR1Parser(G=G, load=True)
-lexer = Lexer(table=table, eof=G.EOF, load=True)
+load = True
+save = False
+
+parser = LR1Parser(G=G, load=load, save=save)
+lexer = Lexer(table=table, eof=G.EOF, load=load, save=save)
 print("Hello World342")
 
 code_example = """
@@ -25,6 +28,7 @@ for token in tokens:
     print(
         f"row: {token.row}, column: {token.column}, token type: {token.token_type}, lex: {token.lex}"
     )
+    
 parse, operations = parser(tokens)
 # print(parse)
 if parser.errors:
