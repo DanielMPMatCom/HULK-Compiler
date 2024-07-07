@@ -210,17 +210,10 @@ class Interpreter:
     # NewTypeNode(ExpressionNode):
     @visitor.when(NewTypeNode)
     def visit(self, node: NewTypeNode):
-        print("===================================")
-        print("When times are tough, the tough get going, brrr")
         print(node.identifier)
         print(node.args)
         print(self.context.get_type(node.identifier, len(node.args)))
         type_node = self.context.get_type(node.identifier, len(node.args)).current_node
-        print("===================================")
-        print("DEEPCOPY BEFORE")
-        print(type_node)
-        print("===================================")
-
         type_node: TypeDeclarationNode = copy.deepcopy(type_node)
 
         args = node.args
@@ -233,7 +226,7 @@ class Interpreter:
 
         while parent:
             scope = parent.scope
-            for i, vname in enumerate(parent.params_ids):
+            for i, vname in enumerate(parent.param_ids):
                 scope.define_variable(vname=vname, vtype=None)
                 value = self.visit(args[i])
                 scope.get_local_variable_info(vname=vname).update(value)
@@ -245,7 +238,7 @@ class Interpreter:
 
             for method in parent.methods:
                 scope.define_function(
-                    method.identifier, method.params_ids, None, method.expression
+                    method.identifier, method.param_ids, None, method.expression
                 )
 
             if len(parent.type_parent_args) > 0:
@@ -364,7 +357,7 @@ class Interpreter:
         print(" = = = == = " * 10)
 
         method: Function = object_instance.scope.get_global_function_info(
-            node.method_identifier
+            node.method_identifier, len(node.args)
         )
 
         for i, vname in enumerate(method.param_names):

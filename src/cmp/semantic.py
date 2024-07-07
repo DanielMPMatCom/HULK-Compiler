@@ -460,7 +460,7 @@ class Scope:
     
     def get_local_function_info(self, fname, n) -> Function:
         for func in self.local_funcs:
-            if func.name == fname and len(func.params) == n:
+            if func.name == fname and len(func.param_names) == n:
                 return func
         return None
     
