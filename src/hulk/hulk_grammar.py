@@ -1,5 +1,7 @@
 from cmp.pycompiler import Grammar
 from hulk.hulk_ast import*
+from math import pi as piValue
+from math import e as eValue
 
 G =  Grammar()
 
@@ -186,8 +188,8 @@ Atom %= id_, lambda h,s: IDNode(s[1]), None
 Atom %= Func_Call, lambda h,s: s[1], None
 Atom %= base_ + opar + Comma_Sep_Expr_List + cpar, lambda h,s: BaseCallNode(s[3]), None, None, None, None
 Atom %= Vector_Initialization, lambda h,s: s[1], None
-Atom %= pi, lambda h,s: ConstantNumNode(s[1], 3.141592)
-Atom %= e, lambda h,s: ConstantNumNode(s[1], 2.718281)
+Atom %= pi, lambda h,s: ConstantNumNode(s[1], piValue)
+Atom %= e, lambda h,s: ConstantNumNode(s[1], eValue)
 # Atom %= Expression_Block, lambda h,s: s[1], None
 
 #----------------------------------------------Declarations---------------------------------------------------------#

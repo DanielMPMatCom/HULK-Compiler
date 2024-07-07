@@ -1,15 +1,15 @@
 import cmp.visitor as visitor
-from hulk.hulk_ast import*
-from cmp.semantic import*
+from hulk.hulk_ast import *
+from cmp.semantic import *
 
 
-class TypeBuilder():
+class TypeBuilder:
     def __init__(self, context, errors=None):
-        self.context : Context = context
+        self.context: Context = context
         self.errors: list = [] if errors is None else errors
         self.current_type = None
 
-    @visitor.on('node')
+    @visitor.on("node")
     def visit(self, node):
         pass
 
@@ -26,17 +26,31 @@ class TypeBuilder():
             self.errors.append(SemanticError(error, node.line, node.column))
             self.current_type = ErrorType()
 
-        self.current_type.param_names, self.current_type.param_types = self.param_names_and_types(node)
-        
-        if node.parent in ['Number', 'String', 'Boolean']:
-            self.errors.append(SemanticError(f'Type {node.identifier} is inheriting from forbidden type {node.parent}.', node.line, node.column))
+        self.current_type.param_names, self.current_type.param_types = (
+            self.param_names_and_types(node)
+        )
+
+        if node.parent in ["Number", "String", "Boolean"]:
+            self.errors.append(
+                SemanticError(
+                    f"Type {node.identifier} is inheriting from forbidden type {node.parent}.",
+                    node.line,
+                    node.column,
+                )
+            )
         elif node.parent is not None:
             try:
-                parent : Type = self.context.get_type(node.parent)
+                parent: Type = self.context.get_type(node.parent)
                 current = parent
                 while current is not None:
                     if current.name == self.current_type.name:
-                        self.errors.append(SemanticError(f'Circular dependency inheritance {self.current_type.name} : {node.parent} : ... : {current.name}.', node.line, node.column))
+                        self.errors.append(
+                            SemanticError(
+                                f"Circular dependency inheritance {self.current_type.name} : {node.parent} : ... : {current.name}.",
+                                node.line,
+                                node.column,
+                            )
+                        )
                         parent = ErrorType()
                         break
                     current = current.parent
@@ -48,7 +62,7 @@ class TypeBuilder():
             except SemanticError as error:
                 self.errors.append(SemanticError(error, node.line, node.column))
         else:
-            obj_type = self.context.get_type('Object')
+            obj_type = self.context.get_type("Object")
             try:
                 self.current_type.set_parent(obj_type)
             except SemanticError as error:
@@ -73,7 +87,10 @@ class TypeBuilder():
                 return_type = ErrorType()
 
         try:
-            self.context.create_function(node.identifier, self.param_names, self.param_types, return_type, node)
+            self.context.create_function(
+                node.identifier, self.param_names, self.param_types, return_type, body=node.expression
+            )
+            
         except SemanticError as error:
             self.errors.append(SemanticError(error, node.line, node.column))
 
@@ -83,14 +100,20 @@ class TypeBuilder():
             self.current_type = self.context.get_protocol(node.identifier)
         except:
             return
-        
+
         if node.parent is not None:
             try:
-                parent : Type = self.context.get_protocol(node.parent)
+                parent: Type = self.context.get_protocol(node.parent)
                 current = parent
                 while current is not None:
                     if current.name == self.current_type.name:
-                        self.errors.append(SemanticError(f'Circular dependency inheritance {self.current_type.name} : {node.parent} : ... : {current.name}.', node.line, node.column))
+                        self.errors.append(
+                            SemanticError(
+                                f"Circular dependency inheritance {self.current_type.name} : {node.parent} : ... : {current.name}.",
+                                node.line,
+                                node.column,
+                            )
+                        )
                         parent = ErrorType()
                         break
                     current = current.parent
@@ -104,7 +127,7 @@ class TypeBuilder():
 
         for method in node.signatures:
             self.visit(method)
-                
+
     @visitor.when(MethodNode)
     def visit(self, node: MethodNode):
         param_names, param_types = self.param_names_and_types(node)
@@ -138,7 +161,7 @@ class TypeBuilder():
             self.errors.append(SemanticError(error, node.line, node.column))
 
     @visitor.when(ProtocolMethodSignatureNode)
-    def visit(self, node : ProtocolMethodSignatureNode):
+    def visit(self, node: ProtocolMethodSignatureNode):
         param_names, param_types = self.param_names_and_types(node)
         try:
             return_type = self.context.type_protocol_or_vector(node.type)
@@ -150,9 +173,7 @@ class TypeBuilder():
         except SemanticError as error:
             self.errors.append(SemanticError(error, node.line, node.column))
 
-
-
-    def param_names_and_types(self, node : Node):
+    def param_names_and_types(self, node: Node):
         if node.param_ids is None or node.param_types is None:
             return None, None
 
@@ -161,12 +182,18 @@ class TypeBuilder():
         for param_name in node.param_ids:
             param_type = node.param_types[node.param_ids.index(param_name)]
             if param_name in names:
-                self.errors.append(SemanticError(f'Parameter {param_name} already declared.', node.line, node.column))
+                self.errors.append(
+                    SemanticError(
+                        f"Parameter {param_name} already declared.",
+                        node.line,
+                        node.column,
+                    )
+                )
                 types[names.index(param_name)] = ErrorType()
             else:
                 if param_type is None:
                     param_type = UndefinedType()
-                else: 
+                else:
                     try:
                         param_type = self.context.type_protocol_or_vector(param_type)
                     except SemanticError as error:

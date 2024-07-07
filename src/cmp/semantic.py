@@ -480,7 +480,7 @@ class Scope:
     
     def get_all_variables(self):
         variables = [var for var in self.local_vars]
-        if self.paret is not None:
+        if self.parent is not None:
             variables.extend(self.parent.get_all_variables())
         return variables
     

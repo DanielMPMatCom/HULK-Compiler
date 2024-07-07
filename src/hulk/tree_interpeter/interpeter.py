@@ -12,42 +12,57 @@ def Print(x):
     return x
 
 
-built_in_func = {
-    "range": lambda x, y: range(x, y),
-    "print": lambda x: Print(x),
-    "sqrt": lambda x: math.sqrt(x),
-    "sin": lambda x: math.sin(x),
-    "cos": lambda x: math.cos(x),
-    "exp": lambda x: math.exp(x),
-    "log": lambda y, x: math.log(x, y),
-    "rand": lambda: random.random(),
-    "parse": lambda x: float(x),
-}
+class RuntimeError(Exception):
+    @property
+    def text(self):
+        message = ""
+        for arg in self.args:
+            message += str(arg) + " "
+        return message
 
-binary_operators = {
-    "+": lambda x, y: x + y,
-    "-": lambda x, y: x - y,
-    "*": lambda x, y: x * y,
-    "/": lambda x, y: x / y,
-    "%": lambda x, y: x % y,
-    "@": lambda x, y: x + y,
-    ">": lambda x, y: x > y,
-    "<": lambda x, y: x < y,
-    "^": lambda x, y: x**y,
-    "|": lambda x, y: x or y,
-    "&": lambda x, y: x and y,
-    "==": lambda x, y: x == y,
-    "!=": lambda x, y: x != y,
-    ">=": lambda x, y: x >= y,
-    "<=": lambda x, y: x <= y,
-    "**": lambda x, y: x**y,
-    "@@": lambda x, y: x + " " + y,
-}
-
-unary_operators = {"!": lambda x: not x, "-": lambda x: -x}
+    def __str__(self) -> str:
+        return self.text
 
 
 class Interpreter:
+
+    # region Base
+    built_in_func = {
+        "range": lambda x: range(int(x[0]), int(x[1])),
+        "print": lambda x: Print(*x),
+        "sqrt": lambda x: math.sqrt(*x),
+        "sin": lambda x: math.sin(*x),
+        "cos": lambda x: math.cos(*x),
+        "exp": lambda x: math.exp(*x),
+        "log": lambda x: math.log(*reversed(x)),
+        "rand": lambda: random.random(),
+        "parse": lambda x: float(*x),
+    }
+
+    binary_operators = {
+        "+": lambda x, y: x + y,
+        "-": lambda x, y: x - y,
+        "*": lambda x, y: x * y,
+        "/": lambda x, y: x / y,
+        "%": lambda x, y: x % y,
+        "@": lambda x, y: str(x) + str(y),
+        ">": lambda x, y: x > y,
+        "<": lambda x, y: x < y,
+        "^": lambda x, y: x**y,
+        "|": lambda x, y: x or y,
+        "&": lambda x, y: x and y,
+        "==": lambda x, y: x == y,
+        "!=": lambda x, y: x != y,
+        ">=": lambda x, y: x >= y,
+        "<=": lambda x, y: x <= y,
+        "**": lambda x, y: x**y,
+        "@@": lambda x, y: str(x) + " " + str(y),
+    }
+
+    unary_operators = {"!": lambda x: not x, "-": lambda x: -x}
+    # endRegion
+
+    #region Visitor
     def __init__(self, context, errors=[]):
         self.context: Context = context
         self.errors: list = errors
@@ -55,13 +70,18 @@ class Interpreter:
     def binary_operation(self, node: BinaryExpressionNode):
         left_value = self.visit(node.left_expression)
         right_value = self.visit(node.right_expression)
-
-        return binary_operators[node.operator](left_value, right_value)
+        try:
+            return self.binary_operators[node.operator](left_value, right_value)
+        except Exception as e:
+            print(
+                "💥Runtime Error: "
+                + str(RuntimeError(str(e) + " at", node.line, node.column))
+            )
+            exit(1)
 
     def unary_operation(self, node: UnaryExpressionNode):
         value = self.visit(node.expression)
-
-        return unary_operators[node.operator](value)
+        return self.unary_operators[node.operator](value)
 
     @visitor.on("node")
     def visit(self, node):
@@ -71,6 +91,7 @@ class Interpreter:
     def visit(self, node: ProgramNode):
         for declaration in node.declarations:
             self.visit(declaration)
+        return self.visit(node.expression)
 
     # TypeDeclarationNode(DeclarationNode):
     @visitor.when(TypeDeclarationNode)
@@ -118,7 +139,7 @@ class Interpreter:
     # VariableDeclarationNode(DeclarationNode):
     @visitor.when(VariableDeclarationNode)
     def visit(self, node: VariableDeclarationNode):
-        variable = node.scope.get_local_variable_info(node.identifier)
+        variable = node.scope.get_global_variable_info(node.identifier)
         value = self.visit(node.expression)
         variable.update(value)
         return
@@ -158,7 +179,10 @@ class Interpreter:
     @visitor.when(ForNode)
     def visit(self, node: ForNode):
         evaluation = None
-        iterator = node.scope.get_local_variable_info(node.iterator)
+        iterator: VariableInfo = node.expression.scope.get_global_variable_info(
+            node.iterator
+        )
+
         for variable in self.visit(node.iterable_expression):
             iterator.update(variable)
             evaluation = self.visit(node.expression)
@@ -167,10 +191,13 @@ class Interpreter:
     # DestructiveOperationNode(ExpressionNode):
     @visitor.when(DestructiveOperationNode)
     def visit(self, node: DestructiveOperationNode):
-        vname = node.destiny  # Revisar si esto es el identifier, asumimos que si
-        variable = node.scope.get_global_variable_info(vname)
+        destiny: IDNode = (
+            node.destiny
+        )  # Revisar si esto es el identifier, asumimos que si
+        variable = node.scope.get_global_variable_info(destiny.lexeme)
         value = self.visit(node.expression)
         variable.update(value)
+        return value
 
     # NewTypeNode(ExpressionNode):
     @visitor.when(NewTypeNode)
@@ -276,14 +303,14 @@ class Interpreter:
 
         params = [self.visit(param) for param in node.args]
 
-        if node.identifier in built_in_func:
-            return built_in_func[node](tuple(params))
+        if node.identifier in self.built_in_func:
+            return self.built_in_func[node.identifier](tuple(params))
 
         function: Function = self.context.get_function_by_name(node.identifier)
         scope: Scope = function.body.scope
 
         for i, name in enumerate(function.param_names):
-            variable = scope.get_local_variable_info(name)
+            variable = scope.get_global_variable_info(name)
             variable.update(params[i])
 
         return self.visit(function.body)
@@ -291,8 +318,9 @@ class Interpreter:
     # MethodCallNode(ExpressionNode):
     @visitor.when(MethodCallNode)
     def visit(self, node: MethodCallNode):
+        variable_name = node.object_identifier.lexeme
         object_instance: TypeDeclarationNode = node.scope.get_global_variable_info(
-            node.object_identifier
+            variable_name
         ).value
         method: Function = object_instance.scope.get_global_function_info(
             node.method_identifier
@@ -369,7 +397,6 @@ class Interpreter:
     # IDNode(AtomNode):
     @visitor.when(IDNode)
     def visit(self, node: IDNode):
-        print("lexeme", node.lexeme)
         return node.scope.get_global_variable_info(node.lexeme).value
 
     # OrNode(BoolBinaryOpNode):
@@ -417,3 +444,7 @@ class Interpreter:
     @visitor.when(NotUnaryOpNode)
     def visit(self, node: NotUnaryOpNode):
         return self.unary_operation(node)
+
+    @visitor.when(ConstantNumNode)
+    def visit(self, node: ConstantNumNode):
+        return node.value
