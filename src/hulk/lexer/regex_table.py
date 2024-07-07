@@ -61,7 +61,7 @@ keywords = [
 
 KEYWORDS = extend_tuple(keywords, False)
 
-any_symbol = "(" + "|".join(chr(n) for n in range(0, 255) if chr(n) not in ['*', '|', '(', ')', 'ε', '\\', '\'', '\"']) + ")"
+any_symbol = "(" + "|".join(chr(n) for n in range(0, 256) if (chr(n).isprintable() and chr(n) not in ['*', '|', '(', ')', 'ε', '\\', '\'', '"', ''])) + ")"
 positive = "(" + "|".join(str(n) for n in range(1, 10)) + ")"
 non_negative = "(" + "|".join(str(n) for n in range(10)) + ")"
 lower_letters = "(" + "|".join(chr(n) for n in range(ord("a"), ord("z") + 1)) + ")"
@@ -80,7 +80,7 @@ regexs = [
         G["num"],
     ),
     (
-        f'"({any_symbol}|(\\")|(\\\')|(\\|)|(\\\\)|(\\*))*"',
+        f'"({any_symbol}|(\\\\")|(\\\\\')|(\\|)|(\\\\)|(\\*))*"',
         G["str"],
     ),
 ]
