@@ -509,3 +509,7 @@ class FormatVisitor:
         self.increase_tabs()
         self.visit(node.expression)
         self.decrease_tabs()
+
+    @visitor.when(ConstantNumNode)
+    def visit(self, node : ConstantNumNode):
+        self.add_ans("<ConstantNumNode> " + node.lexeme + " " + str(node.value))

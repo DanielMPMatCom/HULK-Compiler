@@ -395,9 +395,10 @@ class TypeChecker():
     @visitor.when(StringBinaryOpNode)
     def visit(self, node : StringBinaryOpNode):
         string_type = self.context.get_type('String')
+        object_type = self.context.get_type('Object')
         left_type : Type = self.visit(node.left_expression)
         right_type : Type = self.visit(node.right_expression)
-        if not left_type.conforms_to(string_type) or not right_type.conforms_to(string_type):
+        if not left_type.conforms_to(object_type) or not right_type.conforms_to(object_type):
             self.errors.append(SemanticError(f'Invalid operation {node.operator} between {left_type.name} and {right_type.name}', node.line, node.column))
             return ErrorType()
         return string_type

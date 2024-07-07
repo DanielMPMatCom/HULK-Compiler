@@ -361,3 +361,9 @@ class NotNode(NotUnaryOpNode):
     def __init__(self, expression):
         UnaryExpressionNode.__init__(self, expression)
         self.operator = '!'
+
+class ConstantNumNode(NumNode):
+    def __init__(self, name, value):
+        NumNode.__init__(self, name)
+        self.lexeme = name
+        self.value = value

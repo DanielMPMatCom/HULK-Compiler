@@ -55,6 +55,8 @@ keywords = [
     ("protocol", G["protocol"]),
     ("extends", G["extends"]),
     ("base", G["base"]),
+    ("PI", G["PI"]),
+    ("E", G["E"])
 ]
 
 KEYWORDS = extend_tuple(keywords, False)

@@ -44,6 +44,7 @@ and_, or_, not_ = G.Terminals('& | !')
 num_, str_, bool_, id_, let_, in_, is_, as_, if_, elif_, else_, while_, for_, new = G.Terminals('num str bool id let in is as if elif else while for new')
 func_, type_, inherits_, protocol_, extends_, base_ = G.Terminals('func type inherits protocol extends base')
 bar_bar_ = G.Terminal('||')
+pi, e = G.Terminals('PI E')
 
 
 
@@ -185,6 +186,8 @@ Atom %= id_, lambda h,s: IDNode(s[1]), None
 Atom %= Func_Call, lambda h,s: s[1], None
 Atom %= base_ + opar + Comma_Sep_Expr_List + cpar, lambda h,s: BaseCallNode(s[3]), None, None, None, None
 Atom %= Vector_Initialization, lambda h,s: s[1], None
+Atom %= pi, lambda h,s: ConstantNumNode(s[1], 3.141592)
+Atom %= e, lambda h,s: ConstantNumNode(s[1], 2.718281)
 # Atom %= Expression_Block, lambda h,s: s[1], None
 
 #----------------------------------------------Declarations---------------------------------------------------------#

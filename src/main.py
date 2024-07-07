@@ -10,15 +10,14 @@ from cmp.formatVisitor import FormatVisitor
 from hulk.semantic_check.semantic_check_pipeline import semantic_check_pipeline
 
 load = True
-save = False
+save = not load
 
 parser = LR1Parser(G=G, load=load, save=save)
 lexer = Lexer(table=table, eof=G.EOF, load=load, save=save)
-print("Hello World342")
+
 
 code_example = """
-print("The meaning of life is " @ 42);
-print(42); 
+print(sin(2 * PI) ^ 2 + cos(3 * PI / log(4, 64)));
 """
 print(code_example)
 tokens = lexer(code_example)
