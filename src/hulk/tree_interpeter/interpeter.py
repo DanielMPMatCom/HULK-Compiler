@@ -62,7 +62,10 @@ class Interpreter:
     unary_operators = {"!": lambda x: not x, "-": lambda x: -x}
     # endRegion
 
-    #region Visitor
+    def rangeWrapperInit(self, context, min, max):
+        pass 
+
+    # region Visitor
     def __init__(self, context, errors=[]):
         self.context: Context = context
         self.errors: list = errors
