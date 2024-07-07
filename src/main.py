@@ -17,7 +17,23 @@ lexer = Lexer(table=table, eof=G.EOF, load=load, save=save)
 
 
 code_example = """
-print(sin(2 * PI) ^ 2 + cos(3 * PI / log(4, 64)));
+{
+let a = 42 in if (a % 2 == 0) print("Even") else print("odd");
+let a = 42 in print(if (a % 2 == 0) "even " else "odd");
+let a = 42 in
+    if (a % 2 == 0) {
+        print(a);
+        print("Even");
+    }
+    else print("Odd");
+let a = 42, mod = a % 3 in
+    print(
+        if (mod == 0) "Magic"
+        elif (mod % 3 == 1) "Woke"
+        else "Dumb"
+    );
+
+};
 """
 print(code_example)
 tokens = lexer(code_example)
