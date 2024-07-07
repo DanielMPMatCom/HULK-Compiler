@@ -1,5 +1,7 @@
 src/testingT.py
 src/cmp/tools/
+*__pycache__/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
