@@ -28,6 +28,8 @@ def build_regex_grammar():
     Atom %= backslash + pipe, lambda h, s: SymbolNode(s[2])
     Atom %= backslash + star, lambda h, s: SymbolNode(s[2])
     Atom %= backslash + backslash, lambda h, s: SymbolNode(s[2])
+    Atom %= backslash + opar, lambda h,s: SymbolNode(s[2])
+    Atom %= backslash + cpar, lambda h,s: SymbolNode(s[2])
 
 
     return G
