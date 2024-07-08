@@ -36,10 +36,10 @@ class Attribute:
 
 
 class Method:
-    def __init__(self, name, param_names, params_types, return_type, current_node=None):
+    def __init__(self, name, param_names, param_types, return_type, current_node=None):
         self.name = name
         self.param_names = param_names
-        self.param_types = params_types
+        self.param_types = param_types
         self.return_type = return_type
         self.current_node = current_node
 

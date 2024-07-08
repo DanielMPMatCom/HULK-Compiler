@@ -33,7 +33,7 @@ class VariableCollector:
         if node.type_parent_args is None and node.param_ids is None:
             self.current_type.set_parameters()
             node.param_ids = self.current_type.param_names
-            node.params_types = self.current_type.param_types
+            node.param_types = self.current_type.param_types
             node.type_parent_args = []
             for param_name in self.current_type.param_names:
                 node.type_parent_args.append(IDNode(param_name))

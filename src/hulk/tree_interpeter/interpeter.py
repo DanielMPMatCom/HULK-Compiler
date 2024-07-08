@@ -110,7 +110,7 @@ class Interpreter:
     @visitor.when(FunctionDeclarationNode)
     def visit(self, node: FunctionDeclarationNode):
         # function = node.scope.get_local_function_info(
-        #     node.identifier, len(node.params_ids)
+        #     node.identifier, len(node.param_ids)
         # )
         function = self.context.get_function_by_name(node.identifier)
         function.body = node.expression

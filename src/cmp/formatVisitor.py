@@ -118,7 +118,7 @@ class FormatVisitor:
             + str(node.line)
         )
         self.increase_tabs()
-        for i in node.params_ids:
+        for i in node.param_ids:
             self.add_ans(f"Param: {i}")
         self.decrease_tabs()
 
