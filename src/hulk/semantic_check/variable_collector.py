@@ -37,7 +37,7 @@ class VariableCollector:
             node.type_parent_args = []
             for param_name in self.current_type.param_names:
                 node.type_parent_args.append(IDNode(param_name))
-        params_scope = scope.create_child_scope()
+        params_scope = node.scope.create_child_scope()
         for param_name in self.current_type.param_names:
             params_scope.define_variable(
                 param_name,
@@ -59,7 +59,7 @@ class VariableCollector:
         node.scope = scope
         function: Function = self.context.get_function_by_name(node.identifier)
         function_scope = scope.create_child_scope()
-        
+
         for param_name in function.param_names:
             function_scope.define_variable(
                 param_name, function.param_types[function.param_names.index(param_name)]

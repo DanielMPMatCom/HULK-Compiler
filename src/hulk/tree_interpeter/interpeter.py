@@ -210,19 +210,12 @@ class Interpreter:
     # NewTypeNode(ExpressionNode):
     @visitor.when(NewTypeNode)
     def visit(self, node: NewTypeNode):
-        print(node.identifier)
-        print(node.args)
-        print(self.context.get_type(node.identifier, len(node.args)))
+        print(" * * * " * 10)
         type_node = self.context.get_type(node.identifier, len(node.args)).current_node
         type_node: TypeDeclarationNode = copy.deepcopy(type_node)
 
         args = node.args
         parent = type_node
-
-        print(" = = = == = " * 10)
-        print("NEW TYPE INSTANCE")
-        print(parent)
-        print(" = = = == = " * 10)
 
         while parent:
             scope = parent.scope
@@ -231,14 +224,34 @@ class Interpreter:
                 value = self.visit(args[i])
                 scope.get_local_variable_info(vname=vname).update(value)
 
+            print("Variables")
+            for var in scope.get_all_variables():
+                print(var.name, " ", var.value)
+
             for attr in parent.attributes:
+                print(attr, " ", attr.expression)
                 scope.define_variable(f"self.{attr.identifier}", None)
+                print('Last attr parent scope ', attr.scope.parent)
+                attr.scope = parent.scope.create_child_scope()
+                
+                attr.expression.scope = attr.scope.create_child_scope()
+
                 value = self.visit(attr.expression)
+                print(value)
                 scope.get_local_variable_info(f"self.{attr.identifier}").update(value)
 
+            print("Variables and attributes")
+            for var in scope.get_all_variables():
+                print(var.name, " ", var.value)
+
             for method in parent.methods:
+                method: MethodNode
                 scope.define_function(
-                    method.identifier, method.param_ids, None, method.expression
+                    method.identifier,
+                    method.param_ids,
+                    method.param_types,
+                    method.type,
+                    body=method.expression,
                 )
 
             if len(parent.type_parent_args) > 0:
@@ -257,15 +270,12 @@ class Interpreter:
                         if p_method.identifier == c_method.identifier:
                             c_method.scope.define_function(
                                 "base",
-                                p_method.params_ids,
+                                p_method.param_ids,
                                 None,
                                 body=p_method.expression,
                             )
             else:
                 break
-        print(" = = = == = " * 10)
-        print(type_node)
-        print(" = = = == = " * 10)
         return type_node
 
     # IsNode(ExpressionNode):
@@ -349,13 +359,6 @@ class Interpreter:
             if node.method_identifier == "current":
                 return object_instance.pop(0)
 
-        print(" = = = == = " * 10)
-        print(object_instance)
-        print(node.method_identifier)
-        print(node.scope)
-
-        print(" = = = == = " * 10)
-
         method: Function = object_instance.scope.get_global_function_info(
             node.method_identifier, len(node.args)
         )
@@ -370,14 +373,11 @@ class Interpreter:
     # AttributeCallNode(ExpressionNode):
     @visitor.when(AttributeCallNode)
     def visit(self, node: AttributeCallNode):
-
         object_instance: TypeDeclarationNode = node.scope.get_global_variable_info(
-            node.object_identifier
-        ).value
+            f"self.{node.attribute_identifier}"
+        )
 
-        return object_instance.scope.get_global_variable_info(
-            node.attribute_identifier
-        ).value
+        return object_instance.value
 
     # BaseCallNode(ExpressionNode):
     @visitor.when(BaseCallNode)

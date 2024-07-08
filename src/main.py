@@ -18,9 +18,9 @@ lexer = Lexer(table=table, eof=G.EOF, load=load, save=save)
 
 
 code_example = r"""
-type Point {
-    x: Number = 0;
-    y: Number = 0;
+type Point(x, y) {
+    x = x;
+    y = y;
 
     getX() => self.x;
     getY() => self.y;
@@ -30,7 +30,7 @@ type Point {
 }
 
 {
-    let pt = new Point() in
+    let pt = new Point(1, 2) in
     print("x: " @ pt.getX() @ "; y: " @ pt.getY());
 }
 """
