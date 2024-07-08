@@ -37,18 +37,18 @@ class VariableCollector:
             node.type_parent_args = []
             for param_name in self.current_type.param_names:
                 node.type_parent_args.append(IDNode(param_name))
-        params_scope = node.scope.create_child_scope()
+
         for param_name in self.current_type.param_names:
-            params_scope.define_variable(
+            node.scope.define_variable(
                 param_name,
                 self.current_type.param_types[
                     self.current_type.param_names.index(param_name)
                 ],
             )
         for arg in node.type_parent_args:
-            self.visit(arg, params_scope.create_child_scope())
+            self.visit(arg, node.scope.create_child_scope())
         for attr in node.attributes:
-            self.visit(attr, params_scope.create_child_scope())
+            self.visit(attr, node.scope.create_child_scope())
         methods_scope = scope.create_child_scope()
         methods_scope.define_variable("self", AutoReferenceType(self.current_type))
         for method in node.methods:

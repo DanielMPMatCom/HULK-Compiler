@@ -219,25 +219,21 @@ class Interpreter:
 
         while parent:
             scope = parent.scope
+            print('@@@' + str([(i.name, i.value) for i in scope.get_all_variables()]))
             for i, vname in enumerate(parent.param_ids):
                 scope.define_variable(vname=vname, vtype=None)
                 value = self.visit(args[i])
-                scope.get_local_variable_info(vname=vname).update(value)
-
+                scope.get_global_variable_info(vname=vname).update(value)
+            
             print("Variables")
             for var in scope.get_all_variables():
                 print(var.name, " ", var.value)
 
-            for attr in parent.attributes:
-                print(attr, " ", attr.expression)
-                scope.define_variable(f"self.{attr.identifier}", None)
-                print('Last attr parent scope ', attr.scope.parent)
-                attr.scope = parent.scope.create_child_scope()
-                
-                attr.expression.scope = attr.scope.create_child_scope()
 
+
+            for attr in parent.attributes:
+                scope.define_variable(f"self.{attr.identifier}", None)
                 value = self.visit(attr.expression)
-                print(value)
                 scope.get_local_variable_info(f"self.{attr.identifier}").update(value)
 
             print("Variables and attributes")
@@ -246,6 +242,10 @@ class Interpreter:
 
             for method in parent.methods:
                 method: MethodNode
+                print(
+                    "Check deepcopy scope parents " + method.identifier,
+                    method.expression.scope.parent if method.expression.scope else None,
+                )
                 scope.define_function(
                     method.identifier,
                     method.param_ids,
