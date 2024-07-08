@@ -585,6 +585,12 @@ class Scope:
                 return self.parent.get_global_function_info(fname, n)
         return local
 
+    def get_all_functions(self):
+        functions = [f for f in self.local_funcs]
+        if self.parent is not None:
+            functions.extend(self.parent.get_all_functions())
+        return functions
+
     def get_all_variables(self):
         variables = [var for var in self.local_vars]
         if self.parent is not None:

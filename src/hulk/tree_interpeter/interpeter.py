@@ -40,7 +40,7 @@ built_in_func = {
     "cos": lambda x: math.cos(*x),
     "exp": lambda x: math.exp(*x),
     "log": lambda x: math.log(*reversed(x)),
-    "rand": lambda: random.random(),
+    "rand": lambda _: random.random(),
     "parse": lambda x: float(*x),
 }
 
@@ -78,6 +78,7 @@ class Interpreter:
     def binary_operation(self, node: BinaryExpressionNode):
         left_value = self.visit(node.left_expression)
         right_value = self.visit(node.right_expression)
+        # print("left ", left_value, " right ", right_value)
         try:
             return binary_operators[node.operator](left_value, right_value)
         except Exception as e:
@@ -210,42 +211,27 @@ class Interpreter:
     # NewTypeNode(ExpressionNode):
     @visitor.when(NewTypeNode)
     def visit(self, node: NewTypeNode):
-        print(" * * * " * 10)
+        # print(" * * * " * 10)
         type_node = self.context.get_type(node.identifier, len(node.args)).current_node
         type_node: TypeDeclarationNode = copy.deepcopy(type_node)
 
-        args = node.args
+        args_evaluated = [self.visit(i) for i in node.args]
         parent = type_node
 
         while parent:
             scope = parent.scope
-            print('@@@' + str([(i.name, i.value) for i in scope.get_all_variables()]))
             for i, vname in enumerate(parent.param_ids):
                 scope.define_variable(vname=vname, vtype=None)
-                value = self.visit(args[i])
-                scope.get_global_variable_info(vname=vname).update(value)
-            
-            print("Variables")
-            for var in scope.get_all_variables():
-                print(var.name, " ", var.value)
-
-
+                scope.get_global_variable_info(vname=vname).update(args_evaluated[i])
 
             for attr in parent.attributes:
                 scope.define_variable(f"self.{attr.identifier}", None)
                 value = self.visit(attr.expression)
                 scope.get_local_variable_info(f"self.{attr.identifier}").update(value)
 
-            print("Variables and attributes")
-            for var in scope.get_all_variables():
-                print(var.name, " ", var.value)
-
             for method in parent.methods:
                 method: MethodNode
-                print(
-                    "Check deepcopy scope parents " + method.identifier,
-                    method.expression.scope.parent if method.expression.scope else None,
-                )
+
                 scope.define_function(
                     method.identifier,
                     method.param_ids,
@@ -255,8 +241,10 @@ class Interpreter:
                 )
 
             if len(parent.type_parent_args) > 0:
-                args = [self.visit(arg) for arg in parent.type_parent_args]
+                args_evaluated = [self.visit(arg) for arg in parent.type_parent_args]
 
+            # print("@@@" + str([i.name for i in scope.get_all_functions()]))
+            # print("###" + str([(i.name, i.value) for i in scope.get_all_variables()]))
             if parent.parent:
                 oldChild = parent
                 parent: TypeDeclarationNode = self.context.get_type(
@@ -269,9 +257,10 @@ class Interpreter:
                     for c_method in oldChild.methods:
                         if p_method.identifier == c_method.identifier:
                             c_method.scope.define_function(
-                                "base",
-                                p_method.param_ids,
-                                None,
+                                fname="base",
+                                param_names=p_method.param_ids,
+                                param_types=p_method.param_types,
+                                return_type=p_method.type,
                                 body=p_method.expression,
                             )
             else:
@@ -282,7 +271,8 @@ class Interpreter:
     @visitor.when(IsNode)
     def visit(self, node: IsNode):
         value = self.visit(node.expression)
-        type = self.context.get_type(node.type)
+
+        type = self.context.get_type(node.type.lexeme)
         if isinstance(value, float):
             return type == "Number"
         elif isinstance(value, str):
@@ -294,17 +284,17 @@ class Interpreter:
         else:
             try:
                 value: TypeDeclarationNode
+                args_len = len(value.param_ids)
                 while value:
-                    if value.identifier == node.type:
+                    if value.identifier == node.type.lexeme:
                         return True
                     if value.parent:
                         value = value.parent
-                        value = Context.get_type(
-                            value.identifier, len(value.type_parent_args)
-                        ).current_node
+                        value = self.context.get_type(value, args_len).current_node
                     else:
                         value = None
-            except:
+            except Exception as e:
+                # print("-----------------------------------------", e)
                 return False
 
         return False
@@ -315,7 +305,7 @@ class Interpreter:
         value = self.visit(node.expression)
         value: TypeDeclarationNode
         tmp = value
-        while tmp.identifier != node.type:
+        while tmp.identifier != node.type.lexeme:
             if tmp.parent:
                 tmp = self.context.get_type(
                     tmp.parent, len(tmp.type_parent_args)
@@ -335,13 +325,17 @@ class Interpreter:
             return built_in_func[node.identifier](tuple(params))
 
         function: Function = self.context.get_function_by_name(node.identifier)
+
+        old_scope_locals = copy.deepcopy(function.body.scope.parent.local_vars)
         scope: Scope = function.body.scope
 
         for i, name in enumerate(function.param_names):
             variable = scope.get_global_variable_info(name)
             variable.update(params[i])
 
-        return self.visit(function.body)
+        value = self.visit(function.body)
+        function.body.scope.parent.local_vars = old_scope_locals
+        return value
 
     # MethodCallNode(ExpressionNode):
     @visitor.when(MethodCallNode)
@@ -359,16 +353,42 @@ class Interpreter:
             if node.method_identifier == "current":
                 return object_instance.pop(0)
 
+        # print(" ------------------------------- MethodCallNode - - - -- - - -- - - - ")
+        # print("variable name: ", variable_name)
+        # print("value :", object_instance)
+        # print("id: ", node.object_identifier.lexeme)
+        # print("mid:", node.method_identifier)
+        # print("-----------------------------DEBUG OFFF ---------------------")
+
+        if object_instance is None and variable_name == "self":
+            object_instance = node
+            # print(
+            #     'object_instance is None and variable_name == "self"',
+            #     [i.name for i in node.scope.get_all_functions()],
+            # )
+
         method: Function = object_instance.scope.get_global_function_info(
             node.method_identifier, len(node.args)
         )
 
-        for i, vname in enumerate(method.param_names):
-            method.body.scope.define_variable(vname, None)  # no hagas eso
-            value = self.visit(node.args[i])
-            method.body.scope.get_local_variable_info(vname).update(value)
+        # method.body = copy.deepcopy(method.body)
 
-        return self.visit(method.body)
+        old_scope_locals = copy.deepcopy(method.body.scope.local_vars)
+        # print(
+        #     "= = = " * 5,
+        #     str([(i.name, i.value) for i in method.body.scope.get_all_variables()]),
+        # )
+        for i, vname in enumerate(method.param_names):
+            value = self.visit(node.args[i])
+            method.body.scope.get_global_variable_info(vname).update(value)
+        # print(
+        #     method.name,
+        #     method.body,
+        #     str([(i.name, i.value) for i in method.body.scope.get_all_variables()]),
+        # )
+        value = self.visit(method.body)
+        method.body.scope.local_vars = old_scope_locals
+        return value
 
     # AttributeCallNode(ExpressionNode):
     @visitor.when(AttributeCallNode)
@@ -382,7 +402,7 @@ class Interpreter:
     # BaseCallNode(ExpressionNode):
     @visitor.when(BaseCallNode)
     def visit(self, node: BaseCallNode):
-        function: Function = node.scope.get_global_function_info("base").value
+        function: Function = node.scope.get_global_function_info("base", len(node.args))
         for i, vname in enumerate(function.param_names):
             function.body.scope.define_variable(vname, None)
             value = self.visit(node.args[i])
@@ -393,9 +413,17 @@ class Interpreter:
     # IndexNode(ExpressionNode):
     @visitor.when(IndexNode)
     def visit(self, node: IndexNode):
-        vector = node.scope.get_global_variable_info(node.object).value
         index = self.visit(node.index)
-        return vector[index]
+        vector = node.scope.get_global_variable_info(node.object.lexeme).value
+        try:
+            int_index = int(index)
+        except Exception as e:
+            print(
+                "💥Runtime Error: "
+                + str(RuntimeError(str(e) + " at", node.line, node.column))
+            )
+            exit(1)
+        return vector[int_index]
 
     # InitializeVectorNode(ExpressionNode):
     @visitor.when(InitializeVectorNode)
@@ -408,8 +436,10 @@ class Interpreter:
         vector = self.visit(node.iterable_expression)
         evaluation = []
         for i in vector:
-            node.operation.scope.define_variable(node.identifier, None)
-            node.operation.scope.get_local_variable_info(node.identifier).update(i)
+            node.operation.scope.define_variable(node.variable_identifier, None)
+            node.operation.scope.get_local_variable_info(
+                node.variable_identifier
+            ).update(i)
             evaluation.append(self.visit(node.operation))
         return evaluation
 
