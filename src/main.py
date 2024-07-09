@@ -90,11 +90,15 @@ function fact(x) => let f = 1 in for (i in range(1, x+1)) f := f * i;
     
     let numbers = [1,2,3,4,5,6,7,8,9] in
         for (x in numbers)
-            print(x);
+            if (x % 2 == 0)
+                print("even" @@ x)
+            else
+                print("odd" @@ x);
     
     let numbers = [1,2,3,4,5,6,7,8,9] in print(numbers[7]);
 
     let squares = [x^2 || x in range(1,10)] in print(squares);
+    let test = [x%2==0 || x in [1,2,3,4,5,6,7,8,9]] in print("test" @@ (if (test[0]) test[0] else "es False"));
 
             
     let x = new Recursive() in
