@@ -8,7 +8,11 @@ import copy
 
 
 def Print(x):
-    print(x)
+    if isinstance(x, TypeDeclarationNode):
+        print("Instance of ", x.identifier)
+    else:
+        print(x)
+
     return x
 
 

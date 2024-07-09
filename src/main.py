@@ -101,6 +101,9 @@ function fact(x) => let f = 1 in for (i in range(1, x+1)) f := f * i;
     print(x.r(5));
     print(fact(5));
 
+    let x = while(10 < 5) print("esto no se imprime") in print("esto si se imprime" @@ x);
+
+    let b = new B() in print(b);
 }
 """
 print(code_example)
