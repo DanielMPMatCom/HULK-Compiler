@@ -3,7 +3,7 @@ from cmp.automata import State, multiline_formatter
 from cmp.pycompiler import Item, Grammar
 from cmp.utils import ContainerSet
 def compute_local_first(firsts, alpha):
-    """Computes First(alpha), given First(Vt) and First(Vn) alpha in (Vt U Vn)* """
+    """Computes First(alpha) """
 
     first_alpha = ContainerSet()
     
