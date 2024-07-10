@@ -172,9 +172,6 @@ Obj_Indx_Method_Attr_Call %= Obj_Indx_Method_Attr_Call + dot + id_, lambda h,s: 
 Obj_Indx_Method_Attr_Call %= Obj_Indx_Method_Attr_Call + obrack + Expression + cbrack, lambda h,s: IndexNode(s[1], s[3]), None, None, None, None
 Obj_Indx_Method_Attr_Call %= Atom, lambda h,s: s[1], None
 
-# Factor %= Atom, lambda h,s: s[1], None
-# Factor %= opar + Simple_Expression + cpar, lambda h,s: s[2], None, None, None
-
 Func_Call %= id_ + opar + Comma_Sep_Expr_List + cpar, lambda h,s: FunctionCallNode(s[1], s[3]), None, None, None, None
 
 Vector_Initialization %= obrack + Comma_Sep_Expr_List + cbrack, lambda h,s: InitializeVectorNode(s[2]), None, None, None
