@@ -158,17 +158,6 @@ def build_LR1_automaton(G):
             else:
                 next_state = visited[next_state_goto]
 
-            # SIN CONTAR LA CLOUSURE
-            # next_state_goto = frozenset(goto_lr1(current_state.state, symbol, firsts))
-            # if len(next_state_goto) <= 0:
-            #     continue
-            # if next_state_goto not in visited.keys():
-            #     pending.append(next_state_goto)
-            #     next_state = State(next_state_goto, True)
-            #     visited[next_state_goto] = next_state
-            # else:
-            #     next_state = visited[next_state_goto]
-
             current_state.add_transition(symbol.Name, next_state)
 
     automaton.set_formatter(multiline_formatter)
