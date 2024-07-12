@@ -1,6 +1,6 @@
 from abc import ABC
 from typing import List, Tuple
-from cmp.ast import*
+# from cmp.ast import*
 from cmp.semantic import Scope
 
 
