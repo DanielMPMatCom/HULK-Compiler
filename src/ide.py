@@ -12,7 +12,7 @@ import sys
 
 sys.setrecursionlimit(1000000)
 
-load = True
+load = False
 save = not load
 
 parser = LR1Parser(G=G, load=load, save=save)
@@ -227,6 +227,13 @@ builtin = [
     "range",
     "sin",
     "cos",
+    "base",
+    "sqrt",
+    "log",
+    "rand",
+    "PI",
+    "E",
+    "self.",
 ]
 
 completions += [
@@ -427,7 +434,7 @@ def main():
                 "boxShadow": "0px 0px 10px 0px rgba(0,0,0,0.1)",
                 "overflow": "scroll",
                 "margin": "0.5rem 0.5rem 0.5rem 0.5rem",
-                "width": "1150px",
+                "width": "1100px",
             }
         },
         completions=completions,
