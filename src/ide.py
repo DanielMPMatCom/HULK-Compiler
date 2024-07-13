@@ -1,6 +1,5 @@
 import streamlit as st
 from code_editor import code_editor
-from streamlit_ace import st_ace
 from hulk.parser.lr1 import LR1Parser
 from hulk.lexer.regex_table import G
 from hulk.hulk_ast import *
