@@ -12,7 +12,7 @@ import sys
 
 sys.setrecursionlimit(1000000)
 
-load = False
+load = True
 save = not load
 
 parser = LR1Parser(G=G, load=load, save=save)
