@@ -1,4 +1,5 @@
 streamlit
 dill
+pydot
 streamlit_code_editor
 streamlit_reveal_slides
