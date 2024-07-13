@@ -4,20 +4,15 @@ import cmp.visitor as visitor
 import streamlit as st
 import math
 import random
-import copy
 
 
 def Print(x):
     if isinstance(x, TypeDeclarationNode):
-        try:
-            st.info(f"Instance of {x.identifier}")
-        except Exception as e:
-            print("Instance of ", x.identifier)
+        st.info(f"Instance of {x.identifier}")
+        print("Instance of ", x.identifier)
     else:
-        try:
-            st.info(x)
-        except Exception as e:
-            print(x)
+        st.info(x)
+        print(x)
 
     return x
 

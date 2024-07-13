@@ -1,5 +1,7 @@
 import streamlit as st
-from code_editor import code_editor
+from code_editor_fix import code_editor
+
+# from code_editor import code_editor
 from hulk.parser.lr1 import LR1Parser
 from hulk.lexer.regex_table import G
 from hulk.hulk_ast import *
@@ -376,7 +378,6 @@ def process_text(text):
     interpreter = Interpreter(context=context)
     result = interpreter.visit(ast)
     st.success("Interpreter Evaluation: " + str(result))
-    
 
 
 def main():
