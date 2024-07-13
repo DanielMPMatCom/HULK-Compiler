@@ -1,7 +1,7 @@
 from hulk.hulk_ast import *
 from cmp.semantic import *
 import cmp.visitor as visitor
-
+import streamlit as st
 import math
 import random
 import copy
@@ -9,9 +9,15 @@ import copy
 
 def Print(x):
     if isinstance(x, TypeDeclarationNode):
-        print("Instance of ", x.identifier)
+        try:
+            st.info(f"Instance of {x.identifier}")
+        except Exception as e:
+            print("Instance of ", x.identifier)
     else:
-        print(x)
+        try:
+            st.info(x)
+        except Exception as e:
+            print(x)
 
     return x
 
@@ -217,7 +223,7 @@ class Interpreter:
     def visit(self, node: NewTypeNode):
         # print(" * * * " * 10)
         type_node = self.context.get_type(node.identifier, len(node.args)).current_node
-        type_node: TypeDeclarationNode = copy.deepcopy(type_node)
+        type_node: TypeDeclarationNode = type_node.copy()
 
         args_evaluated = [self.visit(i) for i in node.args]
         parent = type_node
@@ -254,7 +260,7 @@ class Interpreter:
                 parent: TypeDeclarationNode = self.context.get_type(
                     parent.parent, len(parent.type_parent_args)
                 ).current_node
-                parent = copy.deepcopy(parent)
+                parent = parent.copy()
                 scope.parent = parent.scope  # 100% real, simetrico y no fake
 
                 for p_method in parent.methods:
@@ -330,7 +336,7 @@ class Interpreter:
 
         function: Function = self.context.get_function_by_name(node.identifier)
 
-        old_scope_locals = copy.deepcopy(function.body.scope.parent.local_vars)
+        old_scope_locals = function.body.scope.parent.copy_local_vars()
         scope: Scope = function.body.scope
 
         for i, name in enumerate(function.param_names):
@@ -377,7 +383,7 @@ class Interpreter:
 
         # method.body = copy.deepcopy(method.body)
 
-        old_scope_locals = copy.deepcopy(method.body.scope.local_vars)
+        old_scope_locals = method.body.scope.copy_local_vars()
         # print(
         #     "= = = " * 5,
         #     str([(i.name, i.value) for i in method.body.scope.get_all_variables()]),

@@ -621,6 +621,20 @@ class Scope:
 
         return current_level
 
+    def copy_local_vars(self):
+        return [var for var in self.local_vars]
+    
+    def copy_scope(self):
+        scope = Scope()
+        scope.local_vars = self.copy_local_vars()
+        scope.local_funcs = self.local_funcs
+        scope.parent = self.parent
+        scope.children = [child.copy_scope() for child in self.children]
+        scope.var_index_at_parent = self.var_index_at_parent
+        scope.func_index_at_parent = self.func_index_at_parent
+        return scope
+    
+
     def __repr__(self):
         return str(self)
 

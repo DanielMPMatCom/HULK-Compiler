@@ -228,7 +228,6 @@ parse, operations = parser(tokens)
 if parser.errors:
     print("Parser Errors:")
     for error in parser.errors:
-
         print("\033[91m" + "\t💥" + error + "\033[0m")
     exit(1)
 ast = evaluate_reverse_parse_plus(parse, operations, tokens)
