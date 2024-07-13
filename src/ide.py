@@ -314,7 +314,7 @@ buttons = [
                 },
             ],
         ],
-        "style": {"right": "3rem"},
+        "style": {"right": "2.5rem"},
     },
     {
         "name": "Run",
@@ -324,7 +324,7 @@ buttons = [
         "showWithIcon": True,
         "alwaysOn": True,
         "commands": ["submit"],
-        "style": {"bottom": "0.44rem", "right": "3rem"},
+        "style": {"bottom": "0.44rem", "right": "2.5rem"},
     },
 ]
 # create info bar dictionary
