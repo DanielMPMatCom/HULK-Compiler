@@ -1,2 +1,0 @@
-streamlit_code_editor
-streamlit_reveal_slides

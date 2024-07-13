@@ -1,16 +1,11 @@
 import streamlit as st
-from code_editor_fix import code_editor
-
-# from code_editor import code_editor
+from code_editor import code_editor
 from hulk.parser.lr1 import LR1Parser
 from hulk.lexer.regex_table import G
 from hulk.hulk_ast import *
 from hulk.hulk_lexer import Lexer
 from hulk.lexer.regex_table import table
-from hulk.lexer.token_type import TokenType
-from hulk.lexer.regex import Regex
 from cmp.evaluation import evaluate_reverse_parse_plus
-from cmp.formatVisitor import FormatVisitor
 from hulk.semantic_check.semantic_check_pipeline import semantic_check_pipeline
 from hulk.tree_interpeter.interpeter import Interpreter
 import sys
